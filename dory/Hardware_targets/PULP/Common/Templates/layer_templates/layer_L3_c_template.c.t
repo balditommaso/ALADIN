@@ -178,7 +178,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
     if (k < ${n_tile_W-1}) 
     {
       // Fetch next weights
-      if (pi_core_id()==0) 
+      if (pi_core_id() == 0) 
       {
         pi_cl_ram_read(ram, l3_W + offset_w, db[!i_db_w].w, ${weight_dim}, &req_w);
         offset_w += ${weight_dim};
@@ -210,7 +210,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
     // execution of L2-L1 layer. Either top, middle or bottom layer.
     pi_cl_team_barrier(0);
 
-    if (j==0) 
+    if (j == 0) 
     {
       ${func_name[1] if (n_tile_x > 1 or n_tile_y > 1) and padding > 0 else func_name[0]}((void*)&tile_args);
     } 

@@ -35,16 +35,16 @@ void ${func_name}(void *args)
 {
   // pointers and offsets of buffers in L2 and L3
   unsigned int *real_arg = (unsigned int *) args;
-  unsigned int l3_x =(unsigned int) real_arg[0];
-  unsigned int l3_y =(unsigned int) real_arg[1];
-  unsigned int l3_W =(unsigned int) real_arg[2];
-  unsigned int l2_x =(unsigned int) real_arg[3];
-  unsigned int l2_x_2 =(unsigned int) real_arg[4];
-  unsigned int l2_y =(unsigned int) real_arg[5];
-  unsigned int l2_W =(unsigned int) real_arg[6];
-  unsigned int l1_buffer =(${type} *) real_arg[7];
-  unsigned int hyperram =(unsigned int) real_arg[8];
-  unsigned int out_mult_in =(unsigned int) real_arg[9];
+  unsigned int l3_x = (unsigned int) real_arg[0];
+  unsigned int l3_y = (unsigned int) real_arg[1];
+  unsigned int l3_W = (unsigned int) real_arg[2];
+  unsigned int l2_x = (unsigned int) real_arg[3];
+  unsigned int l2_x_2 = (unsigned int) real_arg[4];
+  unsigned int l2_y = (unsigned int) real_arg[5];
+  unsigned int l2_W = (unsigned int) real_arg[6];
+  unsigned int l1_buffer = (${type} *) real_arg[7];
+  unsigned int hyperram = (unsigned int) real_arg[8];
+  unsigned int out_mult_in = (unsigned int) real_arg[9];
   unsigned int out_shift_in = (unsigned int) real_arg[10];
 
   // define DMA structure for data transfer

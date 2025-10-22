@@ -48,7 +48,7 @@ def print_template_layer_L3(node):
     
     # FLAGS
     # check depth-wise convolutions
-    tk['flag_DW'] = 1 if node.group > 1 else 0
+    tk['flag_DW'] = int(node.group > 1)
     tk['ULTRA_VERBOSE'] = False
 
     ################## NEED A REWRITING IN THIS TEMPLATE PART ######################
@@ -69,12 +69,10 @@ def print_template_layer_L3(node):
     ds_W = node.weight_bits
 
     n_in_L2 = node.tiling_dimensions["L2"]["input_dimensions"][0]
-    if h_out > node.tiling_dimensions["L2"]["output_dimensions"][1]:
-        h_in_L2= node.tiling_dimensions["L2"]["output_dimensions"][1] * s[0] + (ks[0] - 1) - (s[0] - 1)
+    if node.tiling_dimensions["L3"]["output_dimensions"][1] > node.tiling_dimensions["L2"]["output_dimensions"][1]:
+        h_in_L2 = node.tiling_dimensions["L2"]["output_dimensions"][1] * s[0] + (ks[0] - 1) - (s[0] - 1)
     else:
-        h_in_L2= node.tiling_dimensions["L2"]["input_dimensions"][1]
-        
-    h_in = h_in_L2
+        h_in_L2 = node.tiling_dimensions["L2"]["input_dimensions"][1]
         
     w_in_L2 = node.tiling_dimensions["L2"]["input_dimensions"][2]
 
@@ -82,13 +80,11 @@ def print_template_layer_L3(node):
         n_out_L2 = node.tiling_dimensions["L2"]["weights_dimensions"][0]
     else:
         n_out_L2 = node.tiling_dimensions["L2"]["output_dimensions"][0]
-    if h_in > node.tiling_dimensions["L2"]["input_dimensions"][1]:
-        h_out_L2 = int(np.floor((h_in - (ks[0] - 1) + (s[0] - 1)) / s[0]))
+    if node.tiling_dimensions["L3"]["input_dimensions"][1] > node.tiling_dimensions["L2"]["input_dimensions"][1]:
+        h_out_L2 = int(np.floor((node.tiling_dimensions["L2"]["input_dimensions"][1] - (ks[0] - 1) + (s[0] - 1)) / s[0]))
     else:
         h_out_L2 = node.tiling_dimensions["L2"]["output_dimensions"][1]
-    
-    h_out = h_out_L2
-    
+            
     w_out_L2 = node.tiling_dimensions["L2"]["output_dimensions"][2]
 
     tk['conv_overlap1'] = conv_overlap1
