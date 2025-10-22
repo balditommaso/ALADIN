@@ -1,5 +1,5 @@
 {
-	"BNRelu_bits": 64,
+	"BNRelu_bits": 32,
 	"onnx_file": "../mobilenetV1_4bit_tensor_wise.onnx",
     "implementation_config": "../mobilenetV1_4bit.json",
 	"code reserved space":120000,
