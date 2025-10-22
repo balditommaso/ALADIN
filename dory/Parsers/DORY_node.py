@@ -57,6 +57,7 @@ class DORY_node:
         self.min = None
         self.max = None
         self.prefix = None
+        self.implementation = None
 
     @property
     def prefixed_name(self):
@@ -161,6 +162,8 @@ class DORY_node:
                     self.__dict__[attribute.name] = int(attribute.f)
                 elif bool(attribute.ints):
                     self.__dict__[attribute.name] = list(attribute.ints)
+                elif bool(attribute.s):
+                    self.__dict__[attribute.name] = attribute.s.decode("utf-8")
                 elif attribute.i == 0:
                     self.__dict__[attribute.name] = 0
                 else:

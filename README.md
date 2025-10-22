@@ -16,7 +16,40 @@ docker build -t dory-docker:3.9 ./.devcontainer/
 
 Experimets
 ---------
-todo ...
+1. Train the network:
+```
+cd models
+python training.py --save_dir ./checkpoint \
+  --dataset MNIST \
+  --model dummy_cnn \
+  --file_name dummy_cnn \
+  --lr 0.01 \
+  --batch_size 1024 \
+  --num_workers 2 \
+  --seed 42 \
+  --epochs 10 \
+  --scheduler cosine
+cd ..
+```
+
+2. Apply QAT to a network:
+```
+cd models
+python qat.py --save_dir ./checkpoint \
+  --model_path ./checkpoint/dummy_cnn.ckpt \
+  --dataset MNIST \
+  --model dummy_cnn \
+  --config_path ./checkpoint/dummy_cnn_mix_bit.json \
+  --file_name dummy_cnn_mix_bit \
+  --lr 0.001 \
+  --batch_size 1024 \
+  --num_workers 2 \
+  --seed 42 \
+  --epochs 1 \
+  --scheduler cosine \
+  --save_onnx
+cd ..
+```
 
 
 Examples

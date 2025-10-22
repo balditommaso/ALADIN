@@ -38,26 +38,28 @@ class HW_node(DORY_node):
         super().__init__()
         self.__dict__ = node.__dict__
         self.tiling_dimensions = {}
+        lvl = None
         for level in range(HW_description["memory"]["levels"]):
-            self.tiling_dimensions["L{}".format(level+1)] = {}
-            self.tiling_dimensions["L{}".format(level+1)]["weights_dimensions"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["input_dimensions"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["output_dimensions"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["weight_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["bias_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["constants_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["input_activation_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["output_activation_memory"] = None
+            lvl = "L{}".format(level+1)
+            self.tiling_dimensions[lvl] = {}
+            self.tiling_dimensions[lvl]["weights_dimensions"] = None
+            self.tiling_dimensions[lvl]["input_dimensions"] = None
+            self.tiling_dimensions[lvl]["output_dimensions"] = None
+            self.tiling_dimensions[lvl]["weight_memory"] = None
+            self.tiling_dimensions[lvl]["bias_memory"] = None
+            self.tiling_dimensions[lvl]["constants_memory"] = None
+            self.tiling_dimensions[lvl]["input_activation_memory"] = None
+            self.tiling_dimensions[lvl]["output_activation_memory"] = None
         if not isinstance(self.name, type(None)):
             if "Convolution" in self.name or "FullyConnected" in self.name:
-                self.tiling_dimensions["L{}".format(level+1)]["weights_dimensions"] = [self.output_channels, self.input_channels]
-        self.tiling_dimensions["L{}".format(level+1)]["input_dimensions"] = [self.input_channels] + self.input_dimensions
-        self.tiling_dimensions["L{}".format(level+1)]["output_dimensions"] = [self.output_channels] + self.output_dimensions
-        self.tiling_dimensions["L{}".format(level+1)]["weight_memory"] = self.weight_memory
-        self.tiling_dimensions["L{}".format(level+1)]["bias_memory"] = self.bias_memory
-        self.tiling_dimensions["L{}".format(level+1)]["constants_memory"] = self.constants_memory
-        self.tiling_dimensions["L{}".format(level+1)]["input_activation_memory"] = self.input_activation_memory
-        self.tiling_dimensions["L{}".format(level+1)]["output_activation_memory"] = self.output_activation_memory
+                self.tiling_dimensions[lvl]["weights_dimensions"] = [self.output_channels, self.input_channels]
+        self.tiling_dimensions[lvl]["input_dimensions"] = [self.input_channels] + self.input_dimensions
+        self.tiling_dimensions[lvl]["output_dimensions"] = [self.output_channels] + self.output_dimensions
+        self.tiling_dimensions[lvl]["weight_memory"] = self.weight_memory
+        self.tiling_dimensions[lvl]["bias_memory"] = self.bias_memory
+        self.tiling_dimensions[lvl]["constants_memory"] = self.constants_memory
+        self.tiling_dimensions[lvl]["input_activation_memory"] = self.input_activation_memory
+        self.tiling_dimensions[lvl]["output_activation_memory"] = self.output_activation_memory
         self.HW_description = HW_description
         self.check_sum_w = None
         self.check_sum_in = None
@@ -71,7 +73,11 @@ class HW_node(DORY_node):
     def create_tiling_dimensions(self, previous_node, config_file):
         #  ATTENTION MEMORY L3 --> TILE MEMORY DIMENSION --> Decide how to set. Re-init the whole memory?
         for level in np.arange(self.HW_description["memory"]["levels"],1, -1):
-            (weights_dim, input_dims, output_dims) = self.Tiler(self, previous_node, config_file["code reserved space"]).get_tiling(level)
+            (weights_dim, input_dims, output_dims) = self.Tiler(
+                    self, 
+                    previous_node, 
+                    config_file["code reserved space"]
+                ).get_tiling(level)
             self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"] = input_dims
             self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"] = output_dims
             if "Convolution" in self.name or "FullyConnected" in self.name:
@@ -82,19 +88,19 @@ class HW_node(DORY_node):
                 #channel numbers
                 groups = self.group if all(self.group <= d for d in weights_dim) else max(weights_dim)
 
-                self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = np.prod(weights_dim)/groups*np.prod(self.kernel_shape)*self.weight_bits/8
+                self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = np.prod(weights_dim) / groups * np.prod(self.kernel_shape) * self.weight_bits / 8
             else:
                 self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = 0
             constants_memory = 0
             bias_memory = 0
             for name in self.constant_names:
                 if name in ["l","k"]:
-                    constants_memory+=weights_dim[0]*self.constant_bits/8
+                    constants_memory += weights_dim[0] * self.constant_bits / 8
                 if "bias" in name:
                     if groups == 1:
-                        bias_memory+=weights_dim[0]*self.bias_bits/8
+                        bias_memory += weights_dim[0] * self.bias_bits / 8
                     else:
-                        bias_memory+=weights_dim[0]*self.bias_bits/8*16
+                        bias_memory += weights_dim[0] * self.bias_bits / 8 * 16
 
             self.tiling_dimensions["L{}".format(level-1)]["bias_memory"] = int(bias_memory)
             self.tiling_dimensions["L{}".format(level-1)]["constants_memory"] = int(constants_memory)
@@ -195,9 +201,6 @@ class HW_node(DORY_node):
             self.check_sum_w += sum(self.l["value"])
 
     def add_checksum_activations_integer(self, load_directory, node_number, n_inputs=1):
-        ###########################################################################
-        ###### SECTION 4: GENERATE CHECKSUM BY USING OUT_LAYER{i}.TXT FILES  ######
-        ###########################################################################
         self.check_sum_in = []
         self.check_sum_out = []
         for in_idx in range(n_inputs):

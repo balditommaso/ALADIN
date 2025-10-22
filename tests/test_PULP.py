@@ -114,7 +114,7 @@ networks = [
             {
                 'frontend': 'QONNX',
                 'target': 'PULP.PULP_gvsoc',
-                'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_8bits.json',
+                'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits.json',
                 'optional': 'mixed-sw'
             },
         "checksum_final": 'OK'
@@ -129,7 +129,12 @@ regex_MACs = re.compile(r'MACs:\s*(.*)$', re.MULTILINE)
 
 def output_test(output, checksum_final):
     matched_groups = regex.findall(output)
+    print("=== DEBUG output_test ===")
+    print("Expected checksum:", checksum_final)
+    print("Matched groups:", matched_groups)
+    print("=========================")
     return all(m == checksum_final for m in matched_groups)
+
 
 
 # check if a network is compatible with the specified SDK (must be gap-sdk or

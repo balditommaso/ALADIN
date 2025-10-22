@@ -19,6 +19,8 @@ from dory.Frontend_frameworks.QONNX.transformations.dory_relu_quant_parser impor
 from dory.Frontend_frameworks.QONNX.transformations.dory_avg_pool_parser import DoryAvgPoolQuantParser
 from dory.Frontend_frameworks.QONNX.transformations.dory_flatten_parser import DoryFlattenParser
 from dory.Frontend_frameworks.QONNX.transformations.rename_tensors import RenameTensorsSequentially
+from dory.Frontend_frameworks.QONNX.transformations.record_implementation import RecordImplementation
+
 
 # DORY modules
 from dory.Frontend_frameworks.Quantlab.Parser import onnx_manager as Quantlab_onnx_manager
@@ -29,7 +31,8 @@ class onnx_manager(Quantlab_onnx_manager):
     def __init__(
         self, 
         onnx: str, 
-        config_file: Dict[str, Any], 
+        config_file: Dict[str, Any],
+        config_dir: str = "", 
         net_prefix: str = "", 
         log: str = "./logs/Frontend",
         delta: int = 2**30,
@@ -63,6 +66,10 @@ class onnx_manager(Quantlab_onnx_manager):
         model = model.transform(InferShapes())
         model = model.transform(DoryFlattenParser(verbose=verbose))
         model = model.transform(RenameTensorsSequentially(verbose=verbose))
+        model = model.transform(RecordImplementation(
+            os.path.join(config_dir, config_file["implementation_config"]), 
+            verbose
+        ))
         model.save(transformed_onnx_path)
         print("QONNX conversion complete!\nValidation...")
         self.check_flow(qonnx_model, transformed_onnx_path, config_file)
@@ -100,7 +107,7 @@ class onnx_manager(Quantlab_onnx_manager):
         graph = model.graph
 
         # remove and adapt custom attribute from Dory-like DAG
-        remove_names = {"out_scale", "weight_bits", "bias_bits", "input_bits", "out_bits"}
+        remove_names = {"out_scale", "weight_bits", "bias_bits", "input_bits", "out_bits", "implementation"}
         convert_to_inputs = {"min", "max"}
 
         for idx, node in enumerate(graph.node):
