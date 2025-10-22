@@ -261,22 +261,22 @@ void ${func_name}(void *args)
 % else:
   int total_tiles = ${tile_dim_nof * tile_dim_h * tile_dim_w};
 % endif
-  for(iter = 0; iter < total_tiles; iter++) 
+  for (iter = 0; iter < total_tiles; iter++) 
   {
     // update indices
 % if tile_dim_nif != 1 and flag_DW == 0:
     // loop nest is nof,h,w,nif
     _i_nif_load += 1;
-    if(_i_nif_load == ${tile_dim_nif})
+    if (_i_nif_load == ${tile_dim_nif})
     {
       _i_nif_load = 0;
 % endif
       _i_w_load += 1;
-      if(_i_w_load == ${tile_dim_w})
+      if (_i_w_load == ${tile_dim_w})
       {
         _i_w_load = 0;
         _i_h_load += 1;
-        if(_i_h_load == ${tile_dim_h})
+        if (_i_h_load == ${tile_dim_h})
         {
           _i_h_load = 0;
 % if flag_DW == 1:
@@ -312,7 +312,7 @@ void ${func_name}(void *args)
     // switch all double buffering offset and y only after 
     // that all n_input_features have been analyzed: we need 
     // to pass all n_in to produce a single fil double buffered reads
-    if(iter < (total_tiles - 1))
+    if (iter < (total_tiles - 1))
     {
       // prefetch next weights/inputs if there is another tile ahead
       asm volatile("": : :"memory");
@@ -326,9 +326,9 @@ void ${func_name}(void *args)
       // additionally overlap by padding for the first tile after a border one
       // this because in the first tile we use less pixels from x_buffer, since we have the ones of padding
       pad_offset_h = 0, pad_offset_w = 0;
-      if(_i_h_load > 0)
+      if (_i_h_load > 0)
         pad_offset_h = ${padding_top};
-      if(_i_w_load > 0)
+      if (_i_w_load > 0)
         pad_offset_w = ${padding_left};
 % endif
       y_tile_size_h = (_i_h_load + 1 == ${tile_dim_h}) ? ${y_tile_size_h_last} : ${y_tile_size_h};
@@ -370,12 +370,12 @@ void ${func_name}(void *args)
         dory_dma_memcpy_async(&DMA_copy_W);
 % if FLAG_BATCHNORM == 1:
         // transfer BN parameters
-        DMA_copy_k.ext = (uint32_t) l2_W+${l2_off_k} + ${k_tile_size_byte_transfer}*_i_nof_load;
+        DMA_copy_k.ext = (uint32_t) l2_W + ${l2_off_k} + ${k_tile_size_byte_transfer} * _i_nof_load;
         DMA_copy_k.loc = (uint32_t) l1_buffer + ${l1_k_offset} + db_act;
         DMA_copy_k.length_1d_copy = (uint16_t) W_tile_size_nof * ${int(act_dim_bit/8)};
         dory_dma_memcpy_async(&DMA_copy_k);
 
-        DMA_copy_lambda.ext = (uint32_t) l2_W+${l2_off_lambda} + ${lambda_tile_size_byte_transfer}*_i_nof_load;
+        DMA_copy_lambda.ext = (uint32_t) l2_W + ${l2_off_lambda} + ${lambda_tile_size_byte_transfer} * _i_nof_load;
         DMA_copy_lambda.loc = (uint32_t) l1_buffer + ${l1_lambda_offset} + db_act;
         DMA_copy_lambda.length_1d_copy = (uint16_t) W_tile_size_nof * ${int(act_dim_bit/8)};
         dory_dma_memcpy_async(&DMA_copy_lambda);
@@ -537,15 +537,15 @@ void ${func_name}(void *args)
     pi_cl_team_barrier(0);
 
 % if tile_dim_nif != 1 and flag_DW == 0:
-    if(_i_nif_load == 0)
-% endif
+    if (_i_nif_load == 0)
     {
+% endif
       // wait for DMA write/read
       dory_dma_barrier(&DMA_copy_y);
       dory_dma_barrier(&DMA_copy_x);
       dory_dma_barrier(&DMA_copy_W);
 % if FLAG_BATCHNORM == 1:
-      if(iter < (total_tiles-1) && (_i_nif_load != _i_nif_exec || _i_nof_load != _i_nof_exec))
+      if (iter < (total_tiles - 1) && (_i_nif_load != _i_nif_exec || _i_nof_load != _i_nof_exec))
       {
         dory_dma_barrier(&DMA_copy_k);
         dory_dma_barrier(&DMA_copy_lambda);
@@ -557,10 +557,11 @@ void ${func_name}(void *args)
       DMA_copy_y.number_of_2d_copies = y_tile_size_h;
       DMA_copy_y.number_of_1d_copies = y_tile_size_w;
       DMA_copy_y.length_1d_copy = y_length_nof_byte;
+      dory_dma_memcpy_async(&DMA_copy_y);
+% if tile_dim_nif != 1 and flag_DW == 0:
     }
-
-    dory_dma_memcpy_async(&DMA_copy_y);
-
+% endif
+  
     // update prev iterators
     db_state_y = ! db_state_y;
     _i_nof_exec = _i_nof_load;

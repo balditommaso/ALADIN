@@ -19,7 +19,7 @@
 <%
 l3_supported = DORY_HW_graph[0].HW_description['memory']['levels'] > 2
 n_inputs = DORY_HW_graph[0].n_test_inputs
-single_input = n_inputs==1
+single_input = n_inputs == 1
 %>\
 % if not l3_supported:
 #include "${prefix}input.h"

@@ -94,7 +94,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
   // weight L3 tiling. Parameters
   pi_cl_ram_req_t req_w, req_k, req_l, req_bias;
   // first tile transfer. Weights, k, lambda
-  if(pi_core_id() == 0)
+  if (pi_core_id() == 0)
   {
     pi_cl_ram_read(ram, l3_W, db[i_db_w].w, ${weight_dim}, &req_w);
 % if k_dim != 0:
@@ -119,7 +119,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
   // input L3 tiling. Parameters
   pi_cl_ram_req_t req_x;
   // first tile transfer. Input activations
-  if(pi_core_id() == 0) 
+  if (pi_core_id() == 0) 
   {
     pi_cl_ram_read(ram, l3_x, db[i_db_x].x, ${dim_in}, &req_x);
     pi_cl_ram_read_wait(&req_x);
@@ -139,7 +139,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
 
 % if n_tile_x > 1:
   // loop over input/output tiles
-  for(int j = 0; j < ${n_tile_x}; j++) 
+  for (int j = 0; j < ${n_tile_x}; j++) 
   {
     if (pi_core_id() == 0) 
     {
@@ -155,7 +155,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
     }
 % elif n_tile_y > 1:
   // loop over output tiles
-  for(int j = 0; j < ${n_tile_y}; j++) 
+  for (int j = 0; j < ${n_tile_y}; j++) 
   {
 % else:
   int j = 0;
@@ -173,7 +173,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
   int offset_b = ${l3_offset_b + bias_dim};
 % endif
 
-  for(int k = 0; k < ${n_tile_W}; k++) 
+  for (int k = 0; k < ${n_tile_W}; k++) 
   {
     if (k < ${n_tile_W-1}) 
     {
@@ -230,7 +230,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
 
     pi_cl_team_barrier(0);
 % if n_tile_W > 1:
-    if(pi_core_id() == 0)
+    if (pi_core_id() == 0)
     {
       // waiting for weights, lambda, and k
       pi_cl_ram_read_wait(&req_w);
@@ -249,7 +249,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
     i_db_x = !i_db_x;
 % endif
 % if n_tile_y > 1:
-    if(pi_core_id() == 0) 
+    if (pi_core_id() == 0) 
     {
       % if n_tile_x > 1:
       // waits for input transfer to be ended
@@ -265,7 +265,7 @@ void __attribute__ ((noinline)) ${func_name_L3}(void *args)
 
 % if verbose == 1:
     // print the checksum
-    for(int iter = 0; iter < ${dim_out}; iter++)
+    for (int iter = 0; iter < ${dim_out}; iter++)
       checksum += db[i_db_y].y[iter];
     printf("checksum = %d\n", checksum);
 

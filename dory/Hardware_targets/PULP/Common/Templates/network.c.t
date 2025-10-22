@@ -199,7 +199,8 @@ void ${prefix}network_run_cluster(void *args)
 % endif
 
   // count how many layers with weights we have processed to increment the weights_L3 pointer
-  int weight_l_cnt = 0; for (int i = 0; i < ${len(DORY_HW_graph)}; i++) 
+  int weight_l_cnt = 0; 
+  for (int i = 0; i < ${len(DORY_HW_graph)}; i++) 
   {
     // allocate speace for the output
     L2_output = dmalloc(activations_out_size[i], !dir);
@@ -290,7 +291,7 @@ void ${prefix}network_run_cluster(void *args)
 ## TOM HACK: avod checksum from models parsed from QONNX
 % if 'Check_all' in verbose_level and render_checksum:
 % if l3_supported:
-    if (L3_output_layers[i]==1) 
+    if (L3_output_layers[i] == 1) 
     {
       printf("Output in L3. Expected checksum: %d\n", activations_out_checksum[i][exec]);
     } 
