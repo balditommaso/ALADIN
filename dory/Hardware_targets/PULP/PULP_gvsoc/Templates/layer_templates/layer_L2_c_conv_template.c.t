@@ -153,7 +153,7 @@ void ${func_name}(void *args)
 % if flag_LUT:
   // LUT buffer pointer
   volatile ${type} *lut;
-  lut  = l1_buffer + ${buffer_l1_all}
+  lut = l1_buffer + ${buffer_l1_all};
 % endif
 % if flag_DW == 1:
   // depth-wise buffer pointer
@@ -245,7 +245,7 @@ void ${func_name}(void *args)
 
         int32_t prod = X * W;
         if (prod < 0) prod = -prod;
-        VERBOSE_PRINT(prod)
+        VERBOSE_PRINT(prod);
 
         *(lut_buffer + in_idx * num_w + w_idx) = prod;
       }

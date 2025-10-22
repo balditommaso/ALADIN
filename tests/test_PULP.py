@@ -59,16 +59,16 @@ networks = [
     #         },
     #     "checksum_final": 'OK'
     # },
-    {
-        "network_args":
-            {
-                'frontend': 'Quantlab',
-                'target': 'PULP.PULP_gvsoc',
-                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_4bits.json',
-                'optional': 'mixed-sw'
-            },
-        "checksum_final": 'OK'
-    },
+    # {
+    #     "network_args":
+    #         {
+    #             'frontend': 'Quantlab',
+    #             'target': 'PULP.PULP_gvsoc',
+    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_4bits.json',
+    #             'optional': 'mixed-sw'
+    #         },
+    #     "checksum_final": 'OK'
+    # },
     # {
     #     "network_args":
     #         {
@@ -109,16 +109,16 @@ networks = [
     #         },
     #     "checksum_final": 'OK'
     # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'QONNX',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits.json',
-    #             'optional': 'mixed-sw'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
+    {
+        "network_args":
+            {
+                'frontend': 'QONNX',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits.json',
+                'optional': 'mixed-sw'
+            },
+        "checksum_final": 'OK'
+    },
 ]
 
 
