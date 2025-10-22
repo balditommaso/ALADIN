@@ -59,7 +59,8 @@ class Parser_HW_to_C:
             self.perf_layer,
             self.app_directory,
             self.inc_dir_rel,
-            self.src_dir_rel)
+            self.src_dir_rel
+        )
 
     def mapping_makefile(self):
         print("\nGenerating the Makefile.")
@@ -67,7 +68,8 @@ class Parser_HW_to_C:
             self.HWgraph,
             self.HW_description,
             self.save_string_for_Makefile,
-            self.app_directory)
+            self.app_directory
+        )
 
     def l2_c_template(self, node, backend_library):
         if "Pool" in node.name:
@@ -81,13 +83,13 @@ class Parser_HW_to_C:
             else:
                 return "layer_L2_c_addition_template.c"
         else:
-            return "layer_L2_c_conv_template.c"
+            return "layer_L2_c_conv_template.c.t"
 
     def l2_template_mapping(self, node, backend_library):
         tmpl_c = self.l2_c_template(node, backend_library)
         return {
             os.path.join(self.src_dir, node.prefixed_name + ".c"): os.path.join(self.tmpl_dir, tmpl_c),
-            os.path.join(self.inc_dir, node.prefixed_name + ".h"): os.path.join(self.tmpl_dir, "layer_L2_h_template.h"),
+            os.path.join(self.inc_dir, node.prefixed_name + ".h"): os.path.join(self.tmpl_dir, "layer_L2_h_template.h.t"),
         }
 
     def mapping_layers_to_C_files(self):

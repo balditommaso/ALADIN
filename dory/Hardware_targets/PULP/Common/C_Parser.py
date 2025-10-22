@@ -30,9 +30,21 @@ import dory.Hardware_targets.PULP.Backend_Kernels.BackendKernelsAdapter as Backe
 
 
 class C_Parser_PULP(Parser_HW_to_C):
-
-    # Used to manage the ONNX files. By now, supported Convolutions (PW and DW), Pooling, Fully Connected and Relu.
-    def __init__(self, graph, config_file, config_file_dir, verbose_level, perf_layer, precision_library, app_directory, n_inputs=1):
+    """ 
+    Used to manage the ONNX files. 
+    By now, supported Convolutions (PW and DW), Pooling, Fully Connected and Relu.
+    """
+    def __init__(
+        self, 
+        graph, 
+        config_file, 
+        config_file_dir, 
+        verbose_level, 
+        perf_layer, 
+        precision_library, 
+        app_directory, 
+        n_inputs=1
+    ):
 
         file_path = self.get_file_path()
         with open(os.path.join(file_path, "HW_description.json")) as f:
@@ -119,13 +131,14 @@ class C_Parser_PULP(Parser_HW_to_C):
             if n_memory_levels > 2 and \
                 (
                     node.L3_input != 0 or \
-                        (node.tiling_dimensions["L3"]["output_dimensions"] != node.tiling_dimensions["L2"]["output_dimensions"]) or \
+                        (node.tiling_dimensions["L3"]["output_dimensions"] != node.tiling_dimensions["L2"]["output_dimensions"]) \
+                        or \
                         (node.tiling_dimensions["L3"]["weights_dimensions"] != node.tiling_dimensions["L2"]["weights_dimensions"]) \
                 ):
                 tk = Layer2D_writer.print_template_layer_L3(node)
                 TemplateWriter.write(tk, {
-                    os.path.join(self.src_dir, node.prefixed_name + ".c"): os.path.join(self.tmpl_dir, "layer_L3_c_template.c"),
-                    os.path.join(self.inc_dir, node.prefixed_name + ".h"): os.path.join(self.tmpl_dir, "layer_L3_h_template.h")
+                    os.path.join(self.src_dir, node.prefixed_name + ".c"): os.path.join(self.tmpl_dir, "layer_L3_c_template.c.t"),
+                    os.path.join(self.inc_dir, node.prefixed_name + ".h"): os.path.join(self.tmpl_dir, "layer_L3_h_template.h.t")
                 })
                 
                 if node.tiling_dimensions["L3"]["input_dimensions"][1] > node.tiling_dimensions["L2"]["input_dimensions"][1]:

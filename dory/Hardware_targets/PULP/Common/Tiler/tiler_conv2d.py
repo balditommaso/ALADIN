@@ -26,27 +26,34 @@ import math
 import os
 import sys
 from ortools.constraint_solver import pywrapcp
-from ortools.constraint_solver import solver_parameters_pb2
+
+# constants
 CORES = 8
 
 
 class Tiler_Conv2D_PULP():
     # Class to generate the Tiling of the layer.
-    def __init__(self,tiler):
+    def __init__(self, tiler):
         self.__dict__ = tiler.__dict__
 
     def get_tiling(self, level):
-        # This function generate the layer function to be included in the project for the conv2d operations (Convolutions and Fully Connected layers).
+        '''
+        This function generate the layer function to be included in the project for the conv2d operations 
+        (Convolutions and Fully Connected layers).
+        '''
         if level == 3:
-            # L3 tiling
+            # for platforms with 3 levels of tailing
             tiling = self.get_tiling_conv2d_L3()
-            if (self.HW_node.output_channels > tiling[0][0]) and ((self.HW_node.input_dimensions[0] > tiling[1][1]) or (self.HW_node.output_dimensions[0] > tiling[2][1])):
+            out_ch_exceeds = self.HW_node.output_channels > tiling[0][0]
+            in_dim_exceeds = self.HW_node.input_dimensions[0] > tiling[1][1]
+            out_dim_exceeds = self.HW_node.output_dimensions[0] > tiling[2][1]
+            if out_ch_exceeds and (in_dim_exceeds or out_dim_exceeds):
                 print("Convolution: Tiling of weights and Input/output activation from L3 not yet working. Exiting...")
                 os._exit(0)
             else:
                 return tiling
         if level == 2:
-            # L3 tiling
+            # for platforms with only 2 levels of tailing
             tiling = self.get_tiling_conv2d_L2()
             return tiling
         print("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
@@ -55,23 +62,49 @@ class Tiler_Conv2D_PULP():
 
 
     def get_tiling_conv2d_L3(self):
-
+        # remove the space reserved for the code
         L2_memory = self.HW_node.HW_description["memory"]["L2"]["dimension"] - self.code_reserved_space 
         # 4 iterations, adding each time a different part to be tiled, either weights, outputs, or both. Input is forced
         
-        ## This is not completly the correct check. It is not always the previous node in the graph, but it could also be one other. You have to check its input node.
-        if (self.previous_HW_node.tiling_dimensions["L3"]["output_dimensions"] != self.previous_HW_node.tiling_dimensions["L2"]["output_dimensions"]) and not isinstance(self.previous_HW_node.tiling_dimensions["L2"]["output_dimensions"], type(None)):
+        # this is not completly the correct check. It is not always the previous node in the graph, but it could also be one other. You have to check its input node.
+        l3_out = self.previous_HW_node.tiling_dimensions["L3"]["output_dimensions"]
+        l2_out = self.previous_HW_node.tiling_dimensions["L2"]["output_dimensions"]
+        if l3_out != l2_out and l2_out is not None:            
             input_L3 = 1
             self.HW_node.L3_input = 1
         else:
             input_L3 = 0
         # tiling for L3-L2 management
-        buffer_total = self.HW_node.input_activation_memory + self.HW_node.output_activation_memory + self.HW_node.weight_memory + self.HW_node.bias_memory + self.HW_node.constants_memory
-        if (buffer_total <= L2_memory) and input_L3==0:
-            return ([self.HW_node.output_channels, self.HW_node.input_channels], [self.HW_node.input_channels, self.HW_node.input_dimensions[0], self.HW_node.input_dimensions[1]], [self.HW_node.output_channels, self.HW_node.output_dimensions[0], self.HW_node.output_dimensions[1]])
+        buffer_total = sum((
+            self.HW_node.input_activation_memory,
+            self.HW_node.output_activation_memory,
+            self.HW_node.weight_memory,
+            self.HW_node.bias_memory,
+            self.HW_node.constants_memory,
+        ))
+            
+        # stage 0: check if everything fit in L2
+        if (buffer_total <= L2_memory) and input_L3 == 0:
+            return (
+                [
+                    self.HW_node.output_channels, 
+                    self.HW_node.input_channels
+                ], 
+                [
+                    self.HW_node.input_channels, 
+                    self.HW_node.input_dimensions[0], 
+                    self.HW_node.input_dimensions[1]
+                ], 
+                [
+                    self.HW_node.output_channels, 
+                    self.HW_node.output_dimensions[0], 
+                    self.HW_node.output_dimensions[1]
+                ]
+            )
         else:
             db_W = 1
             db_O = 1
+            
         ks = self.HW_node.kernel_shape
         inp_dim = self.HW_node.input_dimensions
         out_dim = self.HW_node.output_dimensions
@@ -80,8 +113,9 @@ class Tiler_Conv2D_PULP():
         s = self.HW_node.strides
         g = self.HW_node.group
         p = self.HW_node.pads
-        conv_overlap_h = 2 * (ks[0] // 2) + ks[0] % 2 - 1 - (s[0] - 1)
+        # conv_overlap_h = 2 * (ks[0] // 2) + ks[0] % 2 - 1 - (s[0] - 1)
 
+        # solve the CP problem
         for iteration in range(0, 4):
             parameters = pywrapcp.Solver.DefaultSolverParameters()
             solver = pywrapcp.Solver("simple_CP", parameters)
@@ -89,33 +123,35 @@ class Tiler_Conv2D_PULP():
             tile_h_out = solver.IntVar(1, out_dim[0], 'tile_h_out')
             zero_variable = solver.IntVar(0, 0, 'zero_variable')
             if input_L3 == 0:
+                # input fit in L2
                 tile_h_in = solver.IntVar(inp_dim[0], inp_dim[0], 'tile_h_in')
                 db_x = 1
             else:
+                # input do not fit in L2 we divide it along the height, it needs double buffering
                 tile_h_in = solver.IntVar(ks[0], inp_dim[0], 'tile_h_in')
                 solver.Add(0 == (tile_h_in - ks[0]) % s[0])
                 db_x = 2
             if iteration == 0:
                 if db_x == 1:
+                    # process the all the rows
                     db_W = 2
                     db_O = 1
                     solver.Add(tile_h_out == out_dim[0])
                 else:
+                    # process all rows and output channels at once
                     solver.Add(tile_h_out == out_dim[0])
                     solver.Add(tile_n_out == out_ch)
                     db_W = 1
                     db_O = 1
             elif iteration == 1:
-                if db_x == 1:
-                    db_W = 1
-                    db_O = 2
-                    solver.Add(tile_n_out == out_ch)
-                else:
-                    solver.Add(tile_n_out == out_ch)
-                    db_W = 1
-                    db_O = 2
+                # height can be tailed, but channel remain full
+                solver.Add(tile_n_out == out_ch)
+                db_W = 1
+                db_O = 2
             elif iteration == 2:
+                # double buffer of the weights
                 if db_x == 1:
+                    # double buffer also the output if the input do not need it
                     db_W = 2
                     db_O = 2
                 else:
@@ -123,49 +159,94 @@ class Tiler_Conv2D_PULP():
                     db_W = 2
                     db_O = 1
             else:
+                # double buffer both weight and outputs
                 db_W = 2
                 db_O = 2
 
             # size constraint
-            input_tile_dimension  = db_x * in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits // 8
-            output_tile_dimension = db_O * out_ch * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits // 8
-            weight_tile_dimension = db_W * tile_n_out * (int(in_ch / g) * np.prod(ks) * self.HW_node.weight_bits // 8 + self.HW_node.bias_bits // 8 * int(self.HW_node.bias_memory != 0))
+            input_bits  = in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits
+            output_bits = out_ch * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits
+            weight_bits = int(in_ch / g) * np.prod(ks) * self.HW_node.weight_bits
+            bias_bits   = self.HW_node.bias_bits * int(self.HW_node.bias_memory != 0)
+
+            input_tile_dimension  = db_x * input_bits  // 8
+            output_tile_dimension = db_O * output_bits // 8
+            weight_tile_dimension = db_W * tile_n_out * (weight_bits + bias_bits) // 8
+            
+            # BN constants
             constants = 0
             for name in self.HW_node.constant_names:
                 if name in ["l","k"]:
-                    constants+=1
+                    constants += 1
             if constants > 0:
-                constants_tile_dimension = db_W * tile_n_out * constants  * self.HW_node.constant_bits // 8
+                constants_tile_dimension = (
+                    db_W * tile_n_out * constants  * self.HW_node.constant_bits // 8
+                )
             else:
                 constants_tile_dimension = 0
-            constraint_all = input_tile_dimension + output_tile_dimension + weight_tile_dimension + constants_tile_dimension
+                
+            constraint_all = sum((
+                input_tile_dimension,
+                output_tile_dimension,
+                weight_tile_dimension,
+                constants_tile_dimension
+            ))
+            
+            # the tail must 
             solver.Add(constraint_all <= L2_memory)
 
             # geometrical constraint
             if db_x == 2 and db_O == 2:   
                 solver.Add(tile_h_out * s[0] == (tile_h_in - (ks[0] - 1) + (s[0] - 1)))
             if db_x == 2:
-                solver.Add(0  == (out_dim[0] - zero_variable) % ((tile_h_in - ks[0] + s[0]) // s[0]))
-
+                solver.Add(0 == (out_dim[0] - zero_variable) % ((tile_h_in - ks[0] + s[0]) // s[0]))
 
             # objective              
             obj_expr = solver.IntVar(0, 100000000000000, "obj_expr")
 
-            ### Adding L1 optimization constraint, since if you can fit a single tile in L1 you save the space for double buffering and you can execute bigger tiles
-            input_tile_dimension_L1  = in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits // 8
-            output_tile_dimension_L1 = tile_n_out * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits // 8
+            # Adding L1 optimization constraint, since if you can fit a single tile in L1 you save the space for double buffering and you can execute bigger tiles
+            input_tile_dimension_L1  = (
+                in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits // 8
+            )
+            output_tile_dimension_L1 = (
+                tile_n_out * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits // 8
+            )
             if g == 1:
-                weight_tile_dimension_L1 = in_ch * tile_n_out * np.prod(ks) * self.HW_node.weight_bits // 8
+                weight_tile_dimension_L1 = (
+                    in_ch * tile_n_out * np.prod(ks) * self.HW_node.weight_bits // 8
+                )
                 im2col_dimension_L1 = 2 * CORES * np.prod(ks) * in_ch
                 weight_full_prec_dimension_L1 = 0
             else:
-                weight_tile_dimension_L1 = in_ch * np.prod(ks) * self.HW_node.weight_bits // 8
-                im2col_dimension_L1 = CORES * (ks[0] * (in_ch + p[0] + p[2]) + ks[0]) * int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))
+                weight_tile_dimension_L1 = (
+                    in_ch * np.prod(ks) * self.HW_node.weight_bits // 8
+                )
+                im2col_dimension_L1 = (
+                    CORES \
+                    * (ks[0] * (in_ch + p[0] + p[2]) + ks[0]) \
+                    * int(
+                        8 / min(
+                            self.HW_node.input_activation_bits, 
+                            self.HW_node.output_activation_bits, 
+                            self.HW_node.weight_bits
+                        )
+                    )
+                )
                 weight_full_prec_dimension_L1 = 0
                 if self.HW_node.weight_bits != 8:
-                    weight_full_prec_dimension_L1 = 32 * 8 * 8 * np.prod(ks) * int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))
+                    weight_full_prec_dimension_L1 = (
+                        32 * 8 * 8 * np.prod(ks) \
+                        * int(
+                            8 / min(
+                                self.HW_node.input_activation_bits, 
+                                self.HW_node.output_activation_bits, 
+                                self.HW_node.weight_bits
+                            )
+                        )
+                    )
+                    
             if "FullyConnected" in self.HW_node.name:
-                im2col_dimension = 0
+                im2col_dimension_L1 = 0
 
             constants = 0
             for name in self.HW_node.constant_names:
@@ -175,8 +256,26 @@ class Tiler_Conv2D_PULP():
                 constants_tile_dimension_L1 = tile_n_out * constants  * self.HW_node.constant_bits // 8
             else:
                 constants_tile_dimension_L1 = 0
-            constraint_all_L1 = input_tile_dimension_L1 + output_tile_dimension_L1 + weight_tile_dimension_L1 + constants_tile_dimension_L1 + im2col_dimension_L1 + weight_full_prec_dimension_L1 + 20 
-            L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
+                
+            lut_dimension_L1 = 0
+            if self.HW_node.implementation == "lut":
+                num_entries = 2 ** (self.HW_node.input_activation_bits + self.HW_node.weight_bits)
+                lut_dimension_L1 = num_entries * 4
+                
+            constraint_all_L1 = sum((
+                input_tile_dimension_L1,
+                output_tile_dimension_L1,
+                weight_tile_dimension_L1,
+                constants_tile_dimension_L1,
+                im2col_dimension_L1,
+                lut_dimension_L1,
+                weight_full_prec_dimension_L1,
+                20
+            )) 
+            
+            L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] \
+                - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] \
+                - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
 
             # objective function: 
             # 1. constraints for pulp-nn perfromance optimization
@@ -192,9 +291,11 @@ class Tiler_Conv2D_PULP():
 
             # maximize the objective
             objective = solver.Maximize(obj_expr, 1)
-            decision_builder = solver.Phase([tile_n_out, tile_h_in, tile_h_out],
-                                            solver.CHOOSE_FIRST_UNBOUND,
-                                            solver.ASSIGN_MIN_VALUE)
+            decision_builder = solver.Phase(
+                [tile_n_out, tile_h_in, tile_h_out],
+                solver.CHOOSE_FIRST_UNBOUND,
+                solver.ASSIGN_MIN_VALUE
+            )
             # Create a solution collector.
             collector = solver.LastSolutionCollector()
             # Add the decision variables.
@@ -209,13 +310,16 @@ class Tiler_Conv2D_PULP():
                 tile_n_out = collector.Value(best_solution, tile_n_out)
                 tile_h_in = collector.Value(best_solution, tile_h_in)
                 tile_h_out = collector.Value(best_solution, tile_h_out)
-                return ([tile_n_out, in_ch], [in_ch, tile_h_in, inp_dim[1]], [out_ch, tile_h_out, out_dim[1]])
+                return (
+                    [tile_n_out, in_ch], 
+                    [in_ch, tile_h_in, inp_dim[1]], 
+                    [out_ch, tile_h_out, out_dim[1]]
+                )
+            
+            
         print("  Conv2d ERROR: no L3-L2 tiling found. Exiting...")
         os._exit(0)
         return None
-
-
-
 
 
     def get_tiling_conv2d_L2(self): 
@@ -225,7 +329,9 @@ class Tiler_Conv2D_PULP():
         ###############################################
         ##### PARAMETERS INITIALIZATION ###############
         ###############################################
-        L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
+        L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] \
+            - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] \
+            - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
         inp_dim = self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1:]
         out_dim = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1:]
         out_ch = self.HW_node.tiling_dimensions["L2"]["weights_dimensions"][0]
@@ -234,50 +340,98 @@ class Tiler_Conv2D_PULP():
         s = self.HW_node.strides
         g = self.HW_node.group
         p = self.HW_node.pads
+        need_lut = self.HW_node.implementation == "lut"
 
         ###############################################
         ##### L2 DIMENSIONS DEFINITION: EARLY EXIT ####
         ###############################################
 
         if g == 1:
-            im2col_dim = 2 * CORES * np.prod(ks) * in_ch * self.HW_node.input_activation_bits/8
+            im2col_dim = 2 * CORES * np.prod(ks) * in_ch * self.HW_node.input_activation_bits / 8
             weight_full_prec_dim = 0
         else:
-            im2col_dim = CORES * (ks[0] * (inp_dim[0] + p[0] + p[2]) + ks[0]) * int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))
-            weight_full_prec_dim = 8 * np.prod(ks) * int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))
+            im2col_dim = CORES \
+                * (ks[0] * (inp_dim[0] + p[0] + p[2]) + ks[0]) \
+                * int(8 / min(
+                    self.HW_node.input_activation_bits, 
+                    self.HW_node.output_activation_bits, 
+                    self.HW_node.weight_bits
+                )
+            )
+            weight_full_prec_dim = 8 * np.prod(ks) \
+                * int(8 / min(
+                    self.HW_node.input_activation_bits, 
+                    self.HW_node.output_activation_bits, 
+                    self.HW_node.weight_bits)
+                )
             if self.HW_node.weight_bits == 8:
                  weight_full_prec_dim = 0
         if 'FullyConnected' in self.HW_node.name:
             im2col_dim = 0
         
+        lut_dim = 0
+        if need_lut:
+            num_lut_cells = 2 ** (self.HW_node.input_activation_bits + self.HW_node.weight_bits)
+            lut_dim = num_lut_cells * 4 
         
+        # L2 tiling memory footprint
         in_mem = self.HW_node.tiling_dimensions["L2"]["input_activation_memory"]
         out_mem = self.HW_node.tiling_dimensions["L2"]["output_activation_memory"]
         h_in   = self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1]
         h_out   = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1]
-        if self.n_memory_levels > 2 and self.HW_node.tiling_dimensions["L3"]["output_dimensions"][1] > self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1]:
-            h_in   = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1] * s[0] + (ks[0] - 1) - (s[0] - 1)
-            inp_dim[0] = h_in
-            in_mem = int(self.HW_node.tiling_dimensions["L2"]["input_activation_memory"] / self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1] * h_in)
-        if self.n_memory_levels > 2 and  self.HW_node.tiling_dimensions["L3"]["input_dimensions"][1] > self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1]:
-            h_out  = int(np.floor((self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1] - (ks[0] - 1) + (s[0] - 1)) / s[0]))
-            out_dim[0] = h_out
-            out_mem = int(self.HW_node.tiling_dimensions["L2"]["output_activation_memory"] / self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1] * h_out)
+        if self.n_memory_levels > 2:
+            L3_out_w = self.HW_node.tiling_dimensions["L3"]["output_dimensions"][1]
+            L2_out_w = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1]
+            if L3_out_w > L2_out_w:
+                # case when the output in L3 is wider than L2
+                scaled_h_in = h_out * s[0] + (ks[0] - 1) - (s[0] - 1)
+                inp_dim[0] = scaled_h_in
+                # rescale the input dimension accordingly
+                in_mem = int(in_mem / h_in * scaled_h_in)
+                h_in = scaled_h_in
+            
+            L3_in_w = self.HW_node.tiling_dimensions["L3"]["input_dimensions"][1]
+            L2_in_w = h_in
+            if L3_in_w > L2_in_w:
+                scaled_h_out  = int(np.floor((h_in - (ks[0] - 1) + (s[0] - 1)) / s[0]))
+                out_dim[0] = scaled_h_out
+                out_mem = int(out_mem / h_out * scaled_h_out)
+                h_out = scaled_h_out
+        
         if "Addition" not in self.HW_node.name and "Pool" not in self.HW_node.name:
-            out_mem = int(self.HW_node.tiling_dimensions["L2"]["output_activation_memory"] / self.HW_node.tiling_dimensions["L2"]["output_dimensions"][0] * self.HW_node.tiling_dimensions["L2"]["weights_dimensions"][0])
-        buffer_total = self.HW_node.tiling_dimensions["L2"]["weight_memory"] + self.HW_node.tiling_dimensions["L2"]["constants_memory"] + self.HW_node.tiling_dimensions["L2"]["bias_memory"] + in_mem + out_mem + im2col_dim + weight_full_prec_dim
+            o_c_out = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][0]
+            w_c_out = self.HW_node.tiling_dimensions["L2"]["weights_dimensions"][0]
+            out_mem = int(out_mem / o_c_out * w_c_out)
+        
+        buffer_total = sum((
+            self.HW_node.tiling_dimensions["L2"]["weight_memory"], 
+            self.HW_node.tiling_dimensions["L2"]["constants_memory"], 
+            self.HW_node.tiling_dimensions["L2"]["bias_memory"],
+            in_mem, 
+            out_mem, 
+            im2col_dim,
+            lut_dim,
+            weight_full_prec_dim
+        ))
         # return immediatly if the memory fits the L1  
         if buffer_total <= L1_memory:
-            return (self.HW_node.tiling_dimensions["L2"]["weights_dimensions"] , [self.HW_node.tiling_dimensions["L2"]["input_dimensions"][0], h_in, self.HW_node.tiling_dimensions["L2"]["input_dimensions"][2]] , [self.HW_node.tiling_dimensions["L2"]["weights_dimensions"][0], h_out, self.HW_node.tiling_dimensions["L2"]["output_dimensions"][2]] )
+            return (
+                self.HW_node.tiling_dimensions["L2"]["weights_dimensions"], 
+                [
+                    self.HW_node.tiling_dimensions["L2"]["input_dimensions"][0], 
+                    h_in, 
+                    self.HW_node.tiling_dimensions["L2"]["input_dimensions"][2]
+                ], 
+                [
+                    self.HW_node.tiling_dimensions["L2"]["weights_dimensions"][0], 
+                    h_out, 
+                    self.HW_node.tiling_dimensions["L2"]["output_dimensions"][2]
+                ]
+            )
         else:
             db = self.double_buffering
 
-        ###############################################
-        ##### TILING OF LAYER USING ORTOOLS ###########
-        ###############################################
-        ###############################################
-        ##### INITIALIZATION OF THE TILING VARS #######
-        ###############################################
+        # init variable of the solver
         parameters = pywrapcp.Solver.DefaultSolverParameters()
         solver = pywrapcp.Solver("simple_CP", parameters)
         tile_n_in =  solver.IntVar(1, in_ch, 'tile_n_in')
@@ -288,10 +442,7 @@ class Tiler_Conv2D_PULP():
         tile_w_out = solver.IntVar(1, out_dim[1], 'tile_w_out')
         zero_variable = solver.IntVar(0, 0, 'zero_variable')
 
-        ###############################################
-        ##### GEOMETRICAL CONSTRAINTS #################
-        ###############################################
-        
+        ## geometrical constraints
         if g == 1 or (inp_dim[0] > 32 and inp_dim[1] > 32):
             solver.Add(0 == (tile_h_in - ks[0]) % s[0])
         if g > 1:
@@ -316,27 +467,56 @@ class Tiler_Conv2D_PULP():
                 solver.Add(tile_h_out * s[0] == (tile_h_in - (ks[0] - 1) + ((tile_h_in % inp_dim[0]) == 0) * (p[0] + p[2]) + (s[0] - 1)))
                 solver.Add(tile_w_in == inp_dim[1])
                 solver.Add(tile_w_out == out_dim[1])
-            solver.Add(tile_n_in % int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))==0)
+                
+            solver.Add(tile_n_in % int(8 / min(
+                self.HW_node.input_activation_bits, 
+                self.HW_node.output_activation_bits, 
+                self.HW_node.weight_bits
+            ))==0)
+            
         if g == 1:
             solver.Add(tile_n_in == int(in_ch))
-        solver.Add(tile_n_out % int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))==0)
+            
+        solver.Add(tile_n_out % int( 8 / min(
+            self.HW_node.input_activation_bits, 
+            self.HW_node.output_activation_bits, 
+            self.HW_node.weight_bits
+        ))==0)
 
         ###############################################
         ##### CONSTRAINTS FOR DIMENSION ###############
         ###############################################
 
-        input_tile_dimension  = db * (tile_n_in * tile_h_in * tile_w_in * self.HW_node.input_activation_bits) // 8
-        output_tile_dimension = db * (tile_n_out * tile_h_out * tile_w_out * self.HW_node.output_activation_bits) // 8
+        input_tile_dimension  = db * (
+            tile_n_in * tile_h_in * tile_w_in * self.HW_node.input_activation_bits
+        ) // 8
+        output_tile_dimension = db * (
+            tile_n_out * tile_h_out * tile_w_out * self.HW_node.output_activation_bits
+        ) // 8
         if g == 1:
-            weight_tile_dimension = db * tile_n_in * tile_n_out * np.prod(ks) * self.HW_node.weight_bits // 8
+            weight_tile_dimension = db * (
+                tile_n_in * tile_n_out * np.prod(ks) * self.HW_node.weight_bits
+            ) // 8
             im2col_dimension = 2 * CORES * np.prod(ks) * tile_n_in
             weight_full_prec_dimension = 0
         else:
             weight_tile_dimension = (db * tile_n_in * np.prod(ks) * self.HW_node.weight_bits) // 8
-            im2col_dimension = CORES * (ks[0] * (tile_n_in + p[0] + p[2]) + ks[0]) * int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))
+            im2col_dimension = CORES \
+                * (ks[0] * (tile_n_in + p[0] + p[2]) + ks[0]) \
+                * int(8 / min(
+                        self.HW_node.input_activation_bits, 
+                        self.HW_node.output_activation_bits, 
+                        self.HW_node.weight_bits
+                    )
+                )
             weight_full_prec_dimension = 0
             if self.HW_node.weight_bits != 8:
-                weight_full_prec_dimension = db * 8 * 8 * np.prod(ks) * int( 8 / min(self.HW_node.input_activation_bits, self.HW_node.output_activation_bits, self.HW_node.weight_bits))
+                weight_full_prec_dimension = db * 8 * 8 * np.prod(ks) * int(8 / min(
+                            self.HW_node.input_activation_bits, 
+                            self.HW_node.output_activation_bits, 
+                            self.HW_node.weight_bits
+                        )
+                    )
         if "FullyConnected" in self.HW_node.name:
             im2col_dimension = 0
 
@@ -348,8 +528,19 @@ class Tiler_Conv2D_PULP():
             constants_tile_dimension = db * tile_n_out * constants  * self.HW_node.constant_bits // 8
         else:
             constants_tile_dimension = 0
+            
 
-        constraint_all = self.HW_node.tiling_dimensions["L2"]["bias_memory"] + input_tile_dimension + output_tile_dimension + weight_tile_dimension + constants_tile_dimension + im2col_dimension + weight_full_prec_dimension + 40 
+        constraint_all = sum((
+            self.HW_node.tiling_dimensions["L2"]["bias_memory"],
+            input_tile_dimension,
+            output_tile_dimension,
+            weight_tile_dimension,
+            constants_tile_dimension,
+            im2col_dimension,
+            lut_dim,
+            weight_full_prec_dimension,
+            40
+        )) 
 
         solver.Add(constraint_all <= L1_memory)
 
@@ -394,9 +585,11 @@ class Tiler_Conv2D_PULP():
         solver.Add(obj_expr == heuristics)
         objective = solver.Maximize(obj_expr, 1)
 
-        decision_builder = solver.Phase([tile_n_in, tile_n_out, tile_h_in, tile_h_out, tile_w_in, tile_w_out],
-                                        solver.CHOOSE_FIRST_UNBOUND,
-                                        solver.ASSIGN_MIN_VALUE)
+        decision_builder = solver.Phase(
+            [tile_n_in, tile_n_out, tile_h_in, tile_h_out, tile_w_in, tile_w_out],
+            solver.CHOOSE_FIRST_UNBOUND,
+            solver.ASSIGN_MIN_VALUE
+        )
         # Create a solution collector.
         collector = solver.LastSolutionCollector()
         # Add the decision variables.
@@ -426,7 +619,12 @@ class Tiler_Conv2D_PULP():
                 tile_w_in = inp_dim[1]
                 tile_w_out = int((tile_w_in -(ks[1] - 1) + (p[1] + p[3]) + (s[0] - 1))/s[0])
 
-            return ([tile_n_out, tile_n_in], [tile_n_in, tile_h_in, tile_w_in], [tile_n_out, tile_h_out, tile_w_out])
+            return (
+                [tile_n_out, tile_n_in], 
+                [tile_n_in, tile_h_in, tile_w_in], 
+                [tile_n_out, tile_h_out, tile_w_out]
+            )
+        # no solution found!
         print("  Conv2d ERROR: no L2-L1 tiling found of layer {} with dimensions {} / {}, input / output channels {} / {}. Exiting...".format(self.HW_node.__dict__["name"], self.HW_node.__dict__["input_dimensions"], self.HW_node.__dict__["output_dimensions"], self.HW_node.__dict__["input_channels"], self.HW_node.__dict__["output_channels"] ))
         os._exit(0)
         return None

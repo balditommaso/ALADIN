@@ -136,13 +136,16 @@ class PulpMixedAdapter(PulpNNAdapter):
                 src_files.append(f"Convolution/xpulp_nn_conv1d{in_out_weights}.c")
             else:
                 src_files.append(f"Convolution/{maybe_x}pulp_nn_conv{in_out_weights}.c")
-        elif (
-            "FullyConnected" in self.node.name
-            and self.node.output_activation_bits == 32
-        ):
-            src_files.append(f"LinearNoQuant/{maybe_x}pulp_nn_linear{in_out_weights}.c")
+        elif "FullyConnected" in self.node.name and self.node.output_activation_bits == 32:
+            if self.node.implementation == "lut":
+                src_files.append(f"LinearNoQuant/{maybe_x}pulp_nn_linear_lut{in_out_weights}.c")
+            else:
+                src_files.append(f"LinearNoQuant/{maybe_x}pulp_nn_linear{in_out_weights}.c")
         elif "FullyConnected" in self.node.name:
-            src_files.append(f"LinearQuant/{maybe_x}pulp_nn_linear{in_out_weights}.c")
+            if self.node.implementation == "lut":
+                src_files.append(f"LinearQuant/{maybe_x}pulp_nn_linear_lut{in_out_weights}.c")
+            else:
+                src_files.append(f"LinearQuant/{maybe_x}pulp_nn_linear{in_out_weights}.c")
 
         if ("Conv" in self.node.name or "FullyConnected" in self.node.name) and \
             self.node.get_parameter("output_activation_bits") != 32:
