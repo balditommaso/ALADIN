@@ -11,110 +11,110 @@ from network_generate import network_generate
 
 
 networks = [
-    # {
-    #         "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.GAP8_L2',
-    #             'conf_file': './dory/dory_examples/config_files/config_DVS_CNN_9inputs_L2.json',
-    #             'optional': 'mixed-hw'
-    #         },
-    #         "checksum_final": 'OK'
-    # },
-    # {
-    #         "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './dory/dory_examples/config_files/config_DVS_CNN_9inputs_L3.json',
-    #             'optional': 'mixed-hw'
-    #         },
-    #         "checksum_final": 'OK'
-    # },
-    # {
-    #         "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_fast_xpnn.json',
-    #             'optional': 'mixed-hw'
-    #         },
-    #         "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'NEMO',
-    #             'target': 'PULP.GAP8',
-    #             'conf_file': './dory/dory_examples/config_files/config_NEMO_Penguinet_64.json'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'NEMO',
-    #             'target': 'PULP.GAP8',
-    #             'conf_file': './dory/dory_examples/config_files/config_NEMO_dronet.json'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_4bits.json',
-    #             'optional': 'mixed-sw'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_8bits.json',
-    #             'optional': 'mixed-sw'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV2_4bits.json',
-    #             'optional': 'mixed-sw'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.PULP_gvsoc',
-    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV2_8bits.json',
-    #             'optional': 'mixed-sw'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
-    # {
-    #     "network_args":
-    #         {
-    #             'frontend': 'Quantlab',
-    #             'target': 'PULP.GAP8',
-    #             'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_8bits.json',
-    #             'optional': 'mixed-sw'
-    #         },
-    #     "checksum_final": 'OK'
-    # },
+    {
+            "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.GAP8_L2',
+                'conf_file': './dory/dory_examples/config_files/config_DVS_CNN_9inputs_L2.json',
+                'optional': 'mixed-hw'
+            },
+            "checksum_final": 'OK'
+    },
+    {
+            "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './dory/dory_examples/config_files/config_DVS_CNN_9inputs_L3.json',
+                'optional': 'mixed-hw'
+            },
+            "checksum_final": 'OK'
+    },
+    {
+            "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_fast_xpnn.json',
+                'optional': 'mixed-hw'
+            },
+            "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'NEMO',
+                'target': 'PULP.GAP8',
+                'conf_file': './dory/dory_examples/config_files/config_NEMO_Penguinet_64.json'
+            },
+        "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'NEMO',
+                'target': 'PULP.GAP8',
+                'conf_file': './dory/dory_examples/config_files/config_NEMO_dronet.json'
+            },
+        "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_4bits.json',
+                'optional': 'mixed-sw'
+            },
+        "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_8bits.json',
+                'optional': 'mixed-sw'
+            },
+        "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV2_4bits.json',
+                'optional': 'mixed-sw'
+            },
+        "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.PULP_gvsoc',
+                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV2_8bits.json',
+                'optional': 'mixed-sw'
+            },
+        "checksum_final": 'OK'
+    },
+    {
+        "network_args":
+            {
+                'frontend': 'Quantlab',
+                'target': 'PULP.GAP8',
+                'conf_file': './dory/dory_examples/config_files/config_Quantlab_MV1_8bits.json',
+                'optional': 'mixed-sw'
+            },
+        "checksum_final": 'OK'
+    },
     {
         "network_args":
             {
                 'frontend': 'QONNX',
                 'target': 'PULP.PULP_gvsoc',
-                'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits.json',
+                'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits_with_lut.json',
                 'optional': 'mixed-sw'
             },
         "checksum_final": 'OK'

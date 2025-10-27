@@ -47,6 +47,6 @@
         "type": "Linear",
         "bit_width": 2,
         "strategy": "default",
-        "implementation": "default"
+        "implementation": "lut"
     }
 }

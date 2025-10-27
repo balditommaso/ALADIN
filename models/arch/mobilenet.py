@@ -114,7 +114,7 @@ class MobileNet(nn.Module):
 
 
 
-def mobilenet_v1(num_classes: int):
+def mobilenet_v1(input_shape: List[int], num_classes: int) -> nn.Module:
     channels = [
         [32], 
         [64], 

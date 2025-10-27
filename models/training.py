@@ -14,7 +14,7 @@ def argument_parser():
     parser = ArgumentParser()
     parser.add_argument("--save_dir", default="./checkpoint", type=str, help="Path to the saving directory.")
     parser.add_argument("--dataset", default="cifar-10", choices=["cifar-10", "MNIST"], type=str, help="Dataset for training.")
-    parser.add_argument("--model", default="dummy_cnn", choices=["dummy_cnn", "mobilenet_v1"], type=str, help="Model to be trained.")
+    parser.add_argument("--model", default="dummy_cnn", choices=["dummy_cnn", "mobilenet_v1", "MLP"], type=str, help="Model to be trained.")
     parser.add_argument("--file_name", default="mobilenetV1", type=str, help="Name of the files.")
     parser.add_argument("--lr", type=float, default=0.1, help="Learning rate.")
     parser.add_argument("--batch_size", type=int, default=512, help="batch size.")
@@ -36,9 +36,9 @@ def main(args):
     
     # get the data module
     datamodule = DATALOADERS[args.dataset]("./data", args.batch_size, 0.0, args.num_workers, args.seed)
-
+    input_shape = iter(datamodule.train_dataloader()).__next__()[0].shape
     # get the model
-    model = getattr(ARCHS, args.model)(10)
+    model = getattr(ARCHS, args.model)(input_shape, 10)
     
     # log the training
     tb_logger = pl_loggers.TensorBoardLogger(args.save_dir, name=f"{args.file_name}_logs")

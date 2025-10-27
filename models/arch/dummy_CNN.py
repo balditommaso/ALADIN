@@ -4,9 +4,9 @@ from typing import *
 
 class DummyCNN(nn.Module):
     
-    def __init__(self, num_classes=10):
+    def __init__(self, input_shape: List[int], num_classes: int = 10):
         super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=input[1], out_channels=16, kernel_size=3, stride=1, padding=1)
         self.relu1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
         self.relu2 = nn.ReLU()
@@ -14,7 +14,7 @@ class DummyCNN(nn.Module):
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(32 * 14 * 14, num_classes)
         
-    def forward(self, x):
+    def forward(self, x: tensor) -> tensor:
         x = self.relu1(self.conv1(x))
         x = self.relu2(self.conv2(x))
         x = self.avgpool(x)

@@ -227,28 +227,27 @@ void ${func_name}(void *args)
   {
     const int in_bits = ${x_data_size_byte};
     const int w_bits = ${W_data_size_byte};
-    const int in_shift = (1 << (in_bits - 1));
-    const int w_shift = (1 << (w_bits -1));
     const int num_in = (1 << in_bits);
     const int num_w = (1 << w_bits);
-    const int num_entries = num_in * num_w;
-
     int32_t *lut_buffer = (int32_t*)((uint8_t*)l1_buffer + ${buffer_l1_all});
 
+% if ULTRA_VERBOSE:
+    VERBOSE_PRINT("LUT %d x %d (buffer dim ${lut_dim - 8} bytes): \n", in_bits, w_bits);
+% endif
     for (int in_idx = 0; in_idx < num_in; in_idx++)
     {
       for (int w_idx = 0; w_idx < num_w; w_idx++)
       {
-        // decode back to signed values 
-        int X = in_idx - in_shift;
-        int W = w_idx - w_shift;
-
-        int32_t prod = X * W;
+        int32_t prod = (in_idx + 1) * (w_idx + 1);
         if (prod < 0) prod = -prod;
-        VERBOSE_PRINT(prod);
-
         *(lut_buffer + in_idx * num_w + w_idx) = prod;
+% if ULTRA_VERBOSE:
+        VERBOSE_PRINT("(%d, %d)", in_idx * num_w + w_idx, prod);
       }
+      VERBOSE_PRINT("\n");
+% else:
+      }
+% endif
     }
   }
 % endif
@@ -444,11 +443,11 @@ void ${func_name}(void *args)
 % elif flag_DW == 0 and optional_type == 'mixed-hw' and conv1d:
     xpulp_nn_conv1d_${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % elif flag_DW == 0 and 'mixed' in optional_type  and ('Conv' in func_name):
-    ${"x" if 'hw' in optional_type else ""}pulp_nn_conv_${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
+    ${"x" if 'hw' in optional_type else ""}pulp_nn_conv_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % elif flag_DW == 0 and 'mixed' in optional_type  and ('Gemm' in func_name or 'MatMul' in func_name or 'FullyConnected' in func_name) and y_data_size_byte == 32:
-    ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
+    ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % elif flag_DW == 0 and 'mixed' in optional_type  and ('Gemm' in func_name or 'MatMul' in func_name or 'FullyConnected' in func_name):
-  ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
+  ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % elif flag_DW == 1 and optional_type == '8bit' and fs1 == 3 and fs2 == 3 and stride==1:
     pulp_nn_depthwise_generic(
 % elif flag_DW == 1 and optional_type == '8bit' and fs1*fs2 < 4:
@@ -471,6 +470,9 @@ void ${func_name}(void *args)
       0, 
       y, 
       W,
+% endif
+% if flag_LUT:
+      lut,
 % endif
 % if FLAG_BATCHNORM == 1 and y_data_size_byte != 32:
       k, 
