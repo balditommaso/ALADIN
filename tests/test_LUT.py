@@ -10,21 +10,19 @@ network_pairs = [
         {
             'frontend': 'QONNX',
             'target': 'PULP.PULP_gvsoc',
-            'conf_file': "./models/checkpoint/config_files/config_QONNX_MLP_mix_bits.json",
+            'conf_file': "./models/checkpoint/config_files/config_QONNX_dummy_mix_bits.json",
             'optional': 'mixed-sw'
         },
         {
             'frontend': 'QONNX',
             'target': 'PULP.PULP_gvsoc',
-            'conf_file': "./models/checkpoint/config_files/config_QONNX_MLP_mix_bits_with_lut.json",
+            'conf_file': "./models/checkpoint/config_files/config_QONNX_dummy_mix_bits_with_lut.json",
             'optional': 'mixed-sw'
         }
     ),
-    # add more pairs here if needed
 ]
 
 
-# same regexes from your current test
 
 # --- utility: run one network and get checksum + raw stdout
 def run_network(network_args, appdir='./application'):
@@ -50,9 +48,6 @@ def run_network(network_args, appdir='./application'):
 
 
 
-# --- define network pairs to compare
-
-
 @pytest.mark.parametrize('net1_args, net2_args', network_pairs)
 def test_compare_networks(net1_args, net2_args, capsys):
     appdir = './application'
@@ -60,9 +55,9 @@ def test_compare_networks(net1_args, net2_args, capsys):
     with capsys.disabled():
         print(f"Comparing networks:\n  A: {net1_args['conf_file']}\n  B: {net2_args['conf_file']}")
         
-    logits1 = run_network(net1_args, appdir)
-    logits2 = run_network(net2_args, appdir)
-    # Run both networks
+        logits1 = run_network(net1_args, appdir)
+        logits2 = run_network(net2_args, appdir)
+        # Run both networks
     
     with capsys.disabled():
         print(f"Logits {net1_args['conf_file']}:\n {logits1}")

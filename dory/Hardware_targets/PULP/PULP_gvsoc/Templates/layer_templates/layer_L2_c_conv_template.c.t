@@ -46,6 +46,13 @@ void ${func_name}(void *args)
   unsigned int hyperram = (unsigned int) real_arg[8];
   unsigned int out_mult_in = (unsigned int) real_arg[9];
   unsigned int out_shift_in = (unsigned int) real_arg[10];
+% if ULTRA_VERBOSE:
+  if (pi_core_id() == 0)
+  {
+    print_layer_args(real_arg);
+  }
+  
+% endif
 
   // define DMA structure for data transfer
   volatile DMA_copy DMA_copy_k, DMA_copy_lambda;
@@ -93,7 +100,7 @@ void ${func_name}(void *args)
   DMA_copy_y.hwc_to_chw = 0;
   DMA_copy_y.stride_2d = ${y_stride_w_byte};
   DMA_copy_y.stride_1d = ${y_stride_c_byte};
-  DMA_copy_y.dir = 0;
+  DMA_copy_y.dir = 0;     // L1 -> L2
   DMA_copy_y.tid = dma_id;
 
   // how much data fits per iteration and pointers to currnet buffers in L1
@@ -176,6 +183,12 @@ void ${func_name}(void *args)
   DMA_copy_bias.length_1d_copy = (uint16_t) ${b_size_byte};
   dory_dma_memcpy_async(&DMA_copy_bias);
   dory_dma_barrier(&DMA_copy_bias);
+% if ULTRA_VERBOSE:
+  if (pi_core_id() == 0)
+  {
+    print_DMA_transfer(&DMA_copy_bias, "Bias", l2_W, l1_buffer);
+  }
+% endif
 
 % endif
 % if FLAG_BATCHNORM == 1:
@@ -197,7 +210,7 @@ void ${func_name}(void *args)
   dory_dma_barrier(&DMA_copy_lambda);
 
 % endif
-  // copy input from l2 to L1
+  // copy first input from L2 to L1
   DMA_copy_x.ext = l2_x;
   DMA_copy_x.loc = (l1_buffer + ${l1_x_offset}) + 0;
   DMA_copy_x.number_of_2d_copies = ${x_tile_size_h};
@@ -205,6 +218,13 @@ void ${func_name}(void *args)
   DMA_copy_x.length_1d_copy = ${x_tile_size_nif_byte};
   dory_dma_memcpy_async(&DMA_copy_x);
   dory_dma_barrier(&DMA_copy_x);
+% if ULTRA_VERBOSE:
+  if (pi_core_id() == 0)
+  {
+    print_DMA_transfer(&DMA_copy_x, "Input", l2_x, l1_buffer);
+    debug_print_tensor(&DMA_copy_x, "Input", 256);
+  }
+% endif
 
   // copy weights from L2 to L1
   DMA_copy_W.ext = l2_W;
@@ -220,29 +240,42 @@ void ${func_name}(void *args)
 % endif
   dory_dma_memcpy_async(&DMA_copy_W);
   dory_dma_barrier(&DMA_copy_W);
+% if ULTRA_VERBOSE:
+  if (pi_core_id() == 0)
+  {
+    print_DMA_transfer(&DMA_copy_W, "Weight", l2_W, l1_buffer);
+  }
+% endif
 
 % if flag_LUT:
   // popolate the LUT 
   if (pi_core_id() == 0)
   {
-    const int in_bits = ${x_data_size_byte};
-    const int w_bits = ${W_data_size_byte};
-    const int num_in = (1 << in_bits);
-    const int num_w = (1 << w_bits);
+    const int num_in = (1 << ${x_data_size_byte});
+    const int num_w = (1 << ${W_data_size_byte});
     int32_t *lut_buffer = (int32_t*)((uint8_t*)l1_buffer + ${buffer_l1_all});
 
-% if ULTRA_VERBOSE:
-    VERBOSE_PRINT("LUT %d x %d (buffer dim ${lut_dim - 8} bytes): \n", in_bits, w_bits);
-% endif
+    // bias for signed values
+    const int in_bias = (1 << ${x_data_size_byte - 1});
+    const int w_bias = (1 << ${W_data_size_byte - 1});
+
     for (int in_idx = 0; in_idx < num_in; in_idx++)
     {
+% if data_type_x[0] == "i":
+      unsigned X = (unsigned)(in_idx - in_bias);
+% else:
+      unsigned X = (unsigned)in_idx;
+% endif
       for (int w_idx = 0; w_idx < num_w; w_idx++)
       {
-        int32_t prod = (in_idx + 1) * (w_idx + 1);
-        if (prod < 0) prod = -prod;
-        *(lut_buffer + in_idx * num_w + w_idx) = prod;
+        unsigned W = (unsigned)(w_idx - w_bias);
+
+        int32_t prod = X * W;
+        ## if (prod < 0) prod = -prod;
+
+        lut_buffer[(in_idx) * num_w + (w_idx)] = prod;
 % if ULTRA_VERBOSE:
-        VERBOSE_PRINT("(%d, %d)", in_idx * num_w + w_idx, prod);
+        VERBOSE_PRINT("(%d, %d)  ", (in_idx) * num_w + (w_idx), prod);
       }
       VERBOSE_PRINT("\n");
 % else:
@@ -300,20 +333,19 @@ void ${func_name}(void *args)
 % else:
     exec_db_x = 0;
 % endif
-    db_state_x = ! db_state_x;
+    db_state_x = !db_state_x;
     exec_db_W = db_state_W ? ${W_tile_size_byte} : 0;
 % if FLAG_BATCHNORM == 1:
     exec_db_act = db_state_W ? ${k_tile_size_byte_transfer} : 0;
 % endif
     if (_i_nif_load != _i_nif_exec || _i_nof_load != _i_nof_exec)
-      db_state_W = ! db_state_W;
+      db_state_W = !db_state_W;
 
     // switch all double buffering offset and y only after 
     // that all n_input_features have been analyzed: we need 
     // to pass all n_in to produce a single fil double buffered reads
     if (iter < (total_tiles - 1))
     {
-      // prefetch next weights/inputs if there is another tile ahead
       asm volatile("": : :"memory");
 % if tile_dim_nif * tile_dim_h * tile_dim_w != 1:
       x_tile_size_nif = (_i_nif_load + 1 == ${tile_dim_nif}) ? ${x_tile_size_nif_last} : ${x_tile_size_nif};
@@ -342,7 +374,7 @@ void ${func_name}(void *args)
       W_length_nif_byte = (_i_nif_load+1 == ${tile_dim_nif}) ? ${W_tile_size_nif_byte_last} : ${W_tile_nif_byte};
       
 % if tile_dim_nif * tile_dim_h * tile_dim_w != 1:
-      // transfer of next input tile in double buffering
+      // prefetch next input
       DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, ${x_tile_size_h}, ${x_tile_size_w}, ${x_tile_size_nif}, ${x_w}, ${nif*g},  ${conv_overlap1}, ${conv_overlap2}, 0, pad_offset_h, pad_offset_w, 0, ${x_data_size_byte});
       DMA_copy_x.loc = (l1_buffer + ${l1_x_offset}) + db_x;
       DMA_copy_x.number_of_2d_copies = x_tile_size_h;
@@ -351,7 +383,7 @@ void ${func_name}(void *args)
       dory_dma_memcpy_async(&DMA_copy_x);
 % endif
       // transfer of next weight tile if changed input or output channels
-      if (_i_nif_load!=_i_nif_exec || _i_nof_load!=_i_nof_exec)
+      if (_i_nif_load != _i_nif_exec || _i_nof_load != _i_nof_exec)
       {
 % if flag_DW == 0:
         DMA_copy_W.ext = dory_get_tile_3d(l2_W, _i_nof_load, 0, _i_nif_load, ${W_tile_size_nof}, ${fs1}*${fs2}, ${W_tile_size_nif}, ${fs1}*${fs2}, ${nif}, 0, 0, 0, 0, 0, 0, ${W_data_size_byte});
@@ -447,7 +479,7 @@ void ${func_name}(void *args)
 % elif flag_DW == 0 and 'mixed' in optional_type  and ('Gemm' in func_name or 'MatMul' in func_name or 'FullyConnected' in func_name) and y_data_size_byte == 32:
     ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % elif flag_DW == 0 and 'mixed' in optional_type  and ('Gemm' in func_name or 'MatMul' in func_name or 'FullyConnected' in func_name):
-  ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
+    ${"x" if 'hw' in optional_type else ""}pulp_nn_linear_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % elif flag_DW == 1 and optional_type == '8bit' and fs1 == 3 and fs2 == 3 and stride==1:
     pulp_nn_depthwise_generic(
 % elif flag_DW == 1 and optional_type == '8bit' and fs1*fs2 < 4:
@@ -508,6 +540,9 @@ void ${func_name}(void *args)
 % endif
       y, 
       W,
+% if flag_LUT:
+      lut,
+% endif
 % if flag_DW == 1:
       pwt_buffer,
 % endif
@@ -542,10 +577,29 @@ void ${func_name}(void *args)
     if (_i_nif_load == 0)
     {
 % endif
-      // wait for DMA write/read
-      dory_dma_barrier(&DMA_copy_y);
+      // wait until the previous output is not stored in L2
+      if (iter > 0)
+        dory_dma_barrier(&DMA_copy_y);
+      // wait until the pre-fetched input and weight are not ready in L1
+% if tile_dim_nif * tile_dim_h * tile_dim_w != 1:
       dory_dma_barrier(&DMA_copy_x);
+% endif;
       dory_dma_barrier(&DMA_copy_W);
+% if ULTRA_VERBOSE:
+      if (pi_core_id() == 0)
+      {
+        if (iter > 0)
+        {
+          print_DMA_transfer(&DMA_copy_y, "Output", l2_y, l1_buffer);
+          debug_print_tensor(&DMA_copy_y, "Output L2", 512);
+        }
+% if tile_dim_nif * tile_dim_h * tile_dim_w != 1:
+        print_DMA_transfer(&DMA_copy_x, "Input", l2_x, l1_buffer);
+% endif
+        print_DMA_transfer(&DMA_copy_W, "Weight", l2_W, l1_buffer);
+      }
+      
+% endif
 % if FLAG_BATCHNORM == 1:
       if (iter < (total_tiles - 1) && (_i_nif_load != _i_nif_exec || _i_nof_load != _i_nof_exec))
       {
@@ -559,13 +613,14 @@ void ${func_name}(void *args)
       DMA_copy_y.number_of_2d_copies = y_tile_size_h;
       DMA_copy_y.number_of_1d_copies = y_tile_size_w;
       DMA_copy_y.length_1d_copy = y_length_nof_byte;
-      dory_dma_memcpy_async(&DMA_copy_y);
+      
 % if tile_dim_nif != 1 and flag_DW == 0:
     }
 % endif
-  
+    dory_dma_memcpy_async(&DMA_copy_y);
+
     // update prev iterators
-    db_state_y = ! db_state_y;
+    db_state_y = !db_state_y;
     _i_nof_exec = _i_nof_load;
     _i_nif_exec = _i_nif_load;
     _i_h_exec = _i_h_load;
@@ -577,6 +632,13 @@ void ${func_name}(void *args)
 % if not TEST:
   // wait for final write and clean memory
   dory_dma_barrier(&DMA_copy_y);
+% if ULTRA_VERBOSE:
+  if (pi_core_id() == 0)
+  {
+    print_DMA_transfer(&DMA_copy_y, "Output", l2_y, l1_buffer);
+    debug_print_tensor(&DMA_copy_y, "Output L2", 512);
+  }
+% endif
   dory_dma_free(&DMA_copy_y);
 % endif
 }

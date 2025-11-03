@@ -136,25 +136,26 @@ class Parser_HW_to_C:
         prefix = self.HWgraph[0].prefix
         for in_idx in range(self.n_inputs):
             infile = 'input.txt' if self.n_inputs == 1 else f'input_{in_idx}.txt'
+            in_node = self.HWgraph[0]
+            in_bits = in_node.input_activation_bits
+            signed = in_node.input_activation_type == "int"
             try:
                 x_in = np.loadtxt(os.path.join(self.network_directory, infile), delimiter=',', dtype=np.uint8, usecols=[0])
                 x_in = x_in.flatten()
             except FileNotFoundError:
                 print(f"========= WARNING ==========\nInput file {os.path.join(self.network_directory, 'input.txt')} not found; generating random inputs!")
-
+                np.random.seed(42)
                 x_in = np.random.randint(
-                    low=0, 
-                    high=2*8,
+                    low=-2**(in_node.input_activation_bits - 1) if signed else 0, 
+                    high=2**(in_node.input_activation_bits - 1) - 1 if signed else 2**in_node.input_activation_bits,
                     size=self.HWgraph[0].group * self.HWgraph[0].input_channels * self.HWgraph[0].input_dimensions[0] * self.HWgraph[0].input_dimensions[1],
-                    dtype=np.uint8
+                    dtype=np.int8 if signed else np.uint8,
                 )
-
-            in_node = self.HWgraph[0]
-            in_bits = in_node.input_activation_bits
+                    
             if in_bits != 8:
-                x_in = HW_node._compress(x_in, in_bits)
-
-            string_layer = prefix+"inputs.hex" if self.n_inputs == 1 else f"{prefix}inputs_{in_idx}.hex"
+                x_in = HW_node._compress(x_in, in_bits, signed)
+            
+            string_layer = prefix + "inputs.hex" if self.n_inputs == 1 else f"{prefix}inputs_{in_idx}.hex"
             save_s = os.path.join(self.hex_dir, string_layer)
             x_in.astype('uint8').tofile(save_s)
 

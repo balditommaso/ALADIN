@@ -135,7 +135,10 @@ class PulpMixedAdapter(PulpNNAdapter):
             if self.node.conv1d and self._type == "hw":
                 src_files.append(f"Convolution/xpulp_nn_conv1d{in_out_weights}.c")
             else:
-                src_files.append(f"Convolution/{maybe_x}pulp_nn_conv{in_out_weights}.c")
+                if self.node.implementation == "lut":
+                    src_files.append(f"Convolution/{maybe_x}pulp_nn_conv_lut{in_out_weights}.c")
+                else:
+                    src_files.append(f"Convolution/{maybe_x}pulp_nn_conv{in_out_weights}.c")
         elif "FullyConnected" in self.node.name and self.node.output_activation_bits == 32:
             if self.node.implementation == "lut":
                 src_files.append(f"LinearNoQuant/{maybe_x}pulp_nn_linear_lut{in_out_weights}.c")
@@ -162,9 +165,14 @@ class PulpMixedAdapter(PulpNNAdapter):
                 + self.node.get_parameter("weight_type")[0]
                 + str(self.node.get_parameter("weight_bits"))
             )
-            src_files.append(
-                f"MatrixMultiplication/{maybe_x}pulp_nn_matmul{in_out_weights}.c"
-            )
+            if self.node.implementation == "lut":
+                src_files.append(
+                    f"MatrixMultiplication/{maybe_x}pulp_nn_matmul_lut{in_out_weights}.c"
+                )
+            else:
+                src_files.append(
+                    f"MatrixMultiplication/{maybe_x}pulp_nn_matmul{in_out_weights}.c"
+                )
 
         src_files = [os.path.join(self._src_dir(), file) for file in src_files]
 

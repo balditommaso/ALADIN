@@ -112,14 +112,14 @@ void ${func_name}(
 
   volatile int p_r, p_l, p_t, p_b;
   volatile  unsigned short x_tile_size_nif;
-  volatile unsigned short  x_tile_size_h;
-  volatile unsigned short  x_tile_size_w;
-  volatile unsigned short  x_tile_size_byte;
-  volatile unsigned short  x_length_nif_byte;
+  volatile unsigned short x_tile_size_h;
+  volatile unsigned short x_tile_size_w;
+  volatile unsigned short x_tile_size_byte;
+  volatile unsigned short x_length_nif_byte;
   volatile int pad_offset_h, pad_offset_w;
-  volatile unsigned short  W_tile_size_nof;
-  volatile unsigned short  W_tile_size_nif;
-  volatile unsigned short  W_tile_size_byte;
+  volatile unsigned short W_tile_size_nof;
+  volatile unsigned short W_tile_size_nif;
+  volatile unsigned short W_tile_size_byte;
   volatile unsigned short W_length_nif_byte;
   volatile ${type} *x, *W, *y, *b;
 % if FLAG_BATCHNORM == 1:

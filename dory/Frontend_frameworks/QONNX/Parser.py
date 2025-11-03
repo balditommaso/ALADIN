@@ -35,7 +35,7 @@ class onnx_manager(Quantlab_onnx_manager):
         config_dir: str = "", 
         net_prefix: str = "", 
         log: str = "./logs/Frontend",
-        delta: int = 2**30,
+        delta: int = 2**16,
         verbose: bool = False
     ):
         print("")

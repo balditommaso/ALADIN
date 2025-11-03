@@ -49,7 +49,7 @@ def print_template_layer_L3(node):
     # FLAGS
     # check depth-wise convolutions
     tk['flag_DW'] = int(node.group > 1)
-    tk['ULTRA_VERBOSE'] = True
+    tk['ULTRA_VERBOSE'] = False
 
     ################## NEED A REWRITING IN THIS TEMPLATE PART ######################
     #### VARIABLE CREATION FOR COMPATIBILITY WITH THE SECTION AFTER ################
@@ -209,7 +209,7 @@ def print_template_layer(node, layer_type, double_buffering = 2):
         tk['first_layer'] = 0
         
     # misc falg and metadata
-    tk['ULTRA_VERBOSE'] = True
+    tk['ULTRA_VERBOSE'] = False
     tk['verbose_log'] = ""
     tk['node'] = node
     tk['sdk'] = node.HW_description["software development kit"]["name"]

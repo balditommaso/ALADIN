@@ -2,6 +2,7 @@
 #define __PERF_UTILS_H__
 #include <stddef.h>
 #include <stdint.h>
+#include "dory_dma.h"
 
 typedef struct {
   unsigned int L3_input;
@@ -20,4 +21,8 @@ typedef struct {
 
 void print_perf(const char *name, const int cycles, const int macs);
 void checksum(const char *name, const uint8_t *d, size_t size, uint32_t sum_true);
+void print_layer_args(unsigned int *args);
+void debug_print_tensor(const DMA_copy *copy, const char *label, size_t max_elems);
+void print_DMA_transfer(DMA_copy *copy, const char *label, unsigned L2_base_addr, unsigned L1_base_addr);
+
 #endif

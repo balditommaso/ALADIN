@@ -118,17 +118,41 @@ class HW_node(DORY_node):
                             self.constant_names[i] = "weights"
 
     @staticmethod
-    def _compress(x, bits):
-        compressed = []
+    def _compress(x, bits, signed=False):
+        """
+        Packs an array of integers (x) into bytes, supporting signed or unsigned formats.
+
+        Args:
+            x (np.ndarray): Input array of integer values (e.g. int8, int16, etc.)
+            bits (int): Number of bits per element (1, 2, 4, 8)
+            signed (bool): Whether the input values are signed (two’s complement)
+
+        Returns:
+            np.ndarray (dtype=np.uint8): Packed byte array
+        """
         n_elements_in_byte = 8 // bits
-        i_element_in_byte = 0
-        x_masked = x & ((2**bits) - 1)
-        x_reshaped_masked = x_masked.reshape((-1, n_elements_in_byte))
-        po2 = 2**(np.arange(n_elements_in_byte) * bits)
-        po2 = np.tile(po2, (x_reshaped_masked.shape[0], 1))
-        x_reshaped_masked_scaled = x_reshaped_masked * po2
-        x_out = np.sum(x_reshaped_masked_scaled, axis=1).flatten().astype(np.uint8)
-        return x_out
+        max_val = 2**(bits - 1) - 1 if signed else 2**bits - 1
+        min_val = -2**(bits - 1) if signed else 0
+
+        # Clamp to valid range
+        x = np.clip(x, min_val, max_val).astype(np.int32)
+
+        if signed:
+            # Convert negative values to two’s complement form
+            x = np.where(x < 0, x + (1 << bits), x)
+
+        # Mask and reshape
+        x_masked = x & ((1 << bits) - 1)
+        x_reshaped = x_masked.reshape((-1, n_elements_in_byte))
+
+        # Prepare scaling factors (powers of two)
+        po2 = 2 ** (np.arange(n_elements_in_byte) * bits)
+        po2 = np.tile(po2, (x_reshaped.shape[0], 1))
+
+        # Combine bits into packed bytes
+        packed = np.sum(x_reshaped * po2, axis=1).astype(np.uint8)
+
+        return packed
 
     @staticmethod
     def _to_uint8(x, bits):
@@ -162,9 +186,10 @@ class HW_node(DORY_node):
             else:
                 self.__dict__[weight_name]["value"] = self.__dict__[weight_name]["value"].flatten()
             # self.__dict__[weight_name+"_raw"] = self.__dict__[weight_name]
-            self.__dict__[weight_name]["value"] = self.__dict__[weight_name]["value"].astype(np.uint8)
+            signed = self.__dict__[weight_name]["value"].min() < 0.0
+            self.__dict__[weight_name]["value"] = self.__dict__[weight_name]["value"].astype(np.int8 if signed else np.uint8)
             if self.weight_bits != 8:
-                self.__dict__[weight_name]["value"] = self._compress(self.__dict__[weight_name]["value"], self.weight_bits)
+                self.__dict__[weight_name]["value"] = self._compress(self.__dict__[weight_name]["value"], self.weight_bits, signed)
             self.check_sum_w += sum(self.__dict__[weight_name]["value"])
 
         bias_name = ""
