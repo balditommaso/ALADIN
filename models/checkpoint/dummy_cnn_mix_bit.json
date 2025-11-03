@@ -16,7 +16,7 @@
     },
     "relu1": {
         "type": "ReLU",
-        "bit_width": 8,
+        "bit_width": 4,
         "strategy": "default",
         "implementation": "default",
         "per_channel": false,
@@ -24,14 +24,14 @@
     },
     "conv2": {
         "type": "Conv2d",
-        "bit_width": 8,
+        "bit_width": 4,
         "strategy": "default",
         "implementation": "default",
         "per_channel": false
     },
     "relu2": {
         "type": "ReLU",
-        "bit_width": 8,
+        "bit_width": 4,
         "strategy": "default",
         "implementation": "default",
         "per_channel": false,
@@ -39,14 +39,14 @@
     },
     "avgpool": {
         "type": "AvgPool2d",
-        "bit_width": 8,
+        "bit_width": 4,
         "strategy": "default",
         "implementation": "default"
     },
     "fc1": {
         "type": "Linear",
-        "bit_width": 8,
-        "strategy": "lut",
+        "bit_width": 2,
+        "strategy": "default",
         "implementation": "default"
     }
 }

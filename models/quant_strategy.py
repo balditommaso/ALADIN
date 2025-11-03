@@ -42,6 +42,7 @@ def get_quantizer(kind: str, bit_width: int, mode: str = "per_tensor"):
     """
     mapping = {
         # ---- BIAS ----
+        ("bias", 2, "per_tensor"): None,
         ("bias", 4, "per_tensor"): Int16Bias,
         ("bias", 8, "per_tensor"): Int32Bias,
         # ---- WEIGHTS ----
@@ -68,6 +69,7 @@ def get_quantizer(kind: str, bit_width: int, mode: str = "per_tensor"):
 
 def get_quant_module(module: nn.Module, type: str, bit_width: int, strategy: str, **args) -> nn.Module:
     q_module = None
+    need_bias = hasattr(module, "bias") and module.bias is not None and bit_width > 2
     if isinstance(module, nn.Conv2d):
         q_module = qnn.QuantConv2d(
             module.in_channels, 
@@ -76,8 +78,8 @@ def get_quant_module(module: nn.Module, type: str, bit_width: int, strategy: str
             groups=module.groups,
             stride=module.stride,
             padding=module.padding,
-            bias=module.bias is not None and bit_width > 2,
-            bias_quant=get_quantizer("bias", bit_width),
+            bias=need_bias,
+            bias_quant=get_quantizer("bias", bit_width) if need_bias else None,
             weight_quant=get_quantizer("weight", bit_width, "per_channel" if args["per_channel"] else "per_tensor"),
             scaling_min_val = 1e-6
         )
@@ -86,8 +88,8 @@ def get_quant_module(module: nn.Module, type: str, bit_width: int, strategy: str
         q_module = qnn.QuantLinear(
             in_features,
             out_features,
-            bias=module.bias is not None and bit_width > 2,
-            bias_quant=get_quantizer("bias", bit_width),
+            bias=need_bias,
+            bias_quant=get_quantizer("bias", bit_width) if need_bias else None,
             weight_quant=get_quantizer("weight", bit_width),
             scaling_min_val = 1e-6
         )
@@ -130,6 +132,6 @@ def get_quant_module(module: nn.Module, type: str, bit_width: int, strategy: str
     # load the parameters in the quantized version of the module
     if module is not None:
         state_dict = module.state_dict()
-        q_module.load_state_dict(state_dict)
+        q_module.load_state_dict(state_dict, strict=need_bias)
         
     return q_module

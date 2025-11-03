@@ -19,7 +19,7 @@
 <%
 l3_supported = DORY_HW_graph[0].HW_description['memory']['levels'] > 2
 n_inputs = DORY_HW_graph[0].n_test_inputs
-single_input = n_inputs==1
+single_input = n_inputs == 1
 %>\
 % if not l3_supported:
 #include "${prefix}input.h"
@@ -41,19 +41,21 @@ unsigned int PMU_set_voltage(unsigned int Voltage, unsigned int CheckFrequencies
 % endif
 
 
-void application(void * arg) {
-/*
-    Opening of Filesystem and Ram
-*/
+void application(void * arg) 
+{
+  /*
+      Opening of Filesystem and Ram
+  */
 % if l3_supported:
   mem_init();
   ${prefix}network_initialize();
-  % endif
+% endif
   /*
     Allocating space for input
   */
   void *l2_buffer = pi_l2_malloc(${l2_buffer_size});
-  if (NULL == l2_buffer) {
+  if (NULL == l2_buffer) 
+  {
 #ifdef VERBOSE
     printf("ERROR: L2 buffer allocation failed.");
 #endif
@@ -65,30 +67,35 @@ void application(void * arg) {
   size_t l2_input_size = ${int(DORY_HW_graph[0].tiling_dimensions["L2"]["input_activation_memory"])};
   size_t input_size = 1000000;
   int initial_dir = 1;
-  % if l3_supported:
-
+% if l3_supported:
   void *ram_input = ram_malloc(input_size);
-  % endif
-% if not single_input:
-  for (int exec = 0; exec < ${n_inputs}; exec++) {
-    % if l3_supported:
-      load_file_to_ram(ram_input, ${prefix}Input_names[exec]);
-    % endif
-% elif l3_supported:
-      load_file_to_ram(ram_input, "${prefix}inputs.hex");
 % endif
-  % if l3_supported:
-      ram_read(l2_buffer, ram_input, l2_input_size);
-  % endif
-      ${prefix}network_run(l2_buffer, ${l2_buffer_size}, l2_buffer, ${"0" if single_input else "exec"}, initial_dir${f", {prefix}L2_input_h{' + exec * l2_input_size' if not single_input else ''}" if not l3_supported else ""});
-
-  % if not single_input:
+% if not single_input:
+## multiple input
+  for (int exec = 0; exec < ${n_inputs}; exec++) 
+  {
+% if l3_supported:
+    load_file_to_ram(ram_input, ${prefix}Input_names[exec]);
+    ram_read(l2_buffer, ram_input, l2_input_size);
+% endif
+    // run the inference
+    ${prefix}network_run(l2_buffer, ${l2_buffer_size}, l2_buffer, ${"0" if single_input else "exec"}, initial_dir${f", {prefix}L2_input_h{' + exec * l2_input_size' if not single_input else ''}" if not l3_supported else ""});
   }
-  % endif
-  % if l3_supported:
+% else:
+## single input
+% if l3_supported:
+  load_file_to_ram(ram_input, "${prefix}inputs.hex");
+  ram_read(l2_buffer, ram_input, l2_input_size);
+% endif
+
+  // run the inference
+  ${prefix}network_run(l2_buffer, ${l2_buffer_size}, l2_buffer, ${"0" if single_input else "exec"}, initial_dir${f", {prefix}L2_input_h{' + exec * l2_input_size' if not single_input else ''}" if not l3_supported else ""});
+% endif
+
+% if l3_supported:
   ram_free(ram_input, input_size);
   ${prefix}network_terminate();
-  % endif
+% endif
   pi_l2_free(l2_buffer, ${l2_buffer_size});
 }
 

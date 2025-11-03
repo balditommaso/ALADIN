@@ -20,7 +20,7 @@ def argument_parser():
     parser = ArgumentParser()
     parser.add_argument("--save_dir", default="./checkpoint", type=str, help="Path to the saving directory.")
     parser.add_argument("--dataset", default="cifar-10", choices=["cifar-10", "MNIST"], type=str, help="Dataset for training.")
-    parser.add_argument("--model", default="dummy_cnn", choices=["dummy_cnn", "mobilenet_v1"], type=str, help="Model to be trained.")
+    parser.add_argument("--model", default="dummy_cnn", choices=["dummy_cnn", "mobilenet_v1", "MLP"], type=str, help="Model to be trained.")
     parser.add_argument("--model_path", type=str, help="Path to the model checkpoint.")
     parser.add_argument("--config_path", type=str, help="Path to the quant config file.")
     parser.add_argument("--file_name", type=str, help="Name of the files.")
@@ -42,9 +42,10 @@ def main(args):
         
     # get the data module
     datamodule = DATALOADERS[args.dataset]("./data", args.batch_size, 0.0, args.num_workers, args.seed)
+    input_shape = iter(datamodule.train_dataloader()).__next__()[0].shape
 
     # load the model from checkpoint
-    model = getattr(ARCHS, args.model)(10)
+    model = getattr(ARCHS, args.model)(input_shape, 10)
     pl_model = VisionModel.load_from_checkpoint(
         args.model_path, 
         map_location="cpu",

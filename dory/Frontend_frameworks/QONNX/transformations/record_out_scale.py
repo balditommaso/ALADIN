@@ -1,10 +1,23 @@
 import numpy as np
-from copy import deepcopy
-from onnx import helper, TensorProto, numpy_helper
+from onnx import helper, TensorProto, NodeProto
 from qonnx.core.modelwrapper import ModelWrapper
 from dory.Frontend_frameworks.QONNX.transformations.base import BaseTrasformation
 from typing import *
 
+
+def find_quant_producer(model: ModelWrapper, tensor_name: str, depth: int = 5) -> NodeProto:
+    while (depth > 0):
+        node = model.find_producer(tensor_name)
+        if node is None:
+            break
+        
+        if node.op_type in ["Quant", "Trunc"]:
+            return node
+        
+        tensor_name = node.input[0]
+        depth -= 1
+    
+    raise ValueError("Quant Node not found!")
 
 
 class RecordOutScale(BaseTrasformation):
@@ -26,17 +39,20 @@ class RecordOutScale(BaseTrasformation):
             
             if len(node.input) == 2:
                 # out scale is given by the product of the scale 
-                in_quant = model.find_producer(node.input[0])
-                w_quant = model.find_producer(node.input[1])
+                in_quant = find_quant_producer(model, node.input[0])
+                w_quant = find_quant_producer(model, node.input[1])
                 
-                in_scale = model.get_initializer(in_quant.input[1])
-                w_scale = model.get_initializer(w_quant.input[1])
+                in_scale_index = 1 if in_quant.op_type == "Quant" else 4
+                in_scale = model.get_initializer(in_quant.input[in_scale_index])
+                w_scale_index = 1 if w_quant.op_type == "Quant" else 4
+                w_scale = model.get_initializer(w_quant.input[w_scale_index])
                 
-                out_scale = np.prod(in_scale, w_scale)
+                out_scale = np.multiply(in_scale, w_scale)
             elif len(node.input) == 3:
                 # extract the out scale from the bias
-                b_quant = model.find_producer(node.input[2])
-                out_scale = model.get_initializer(b_quant.input[1])
+                b_quant = find_quant_producer(model, node.input[2])
+                out_scale_index = 1 if b_quant.op_type == "Quant" else 4
+                out_scale = model.get_initializer(b_quant.input[out_scale_index])
             else:
                 self.warning_message(f"{node.name} has more than 3 inputs, not handled yet.")
                 continue

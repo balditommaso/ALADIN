@@ -38,26 +38,28 @@ class HW_node(DORY_node):
         super().__init__()
         self.__dict__ = node.__dict__
         self.tiling_dimensions = {}
+        lvl = None
         for level in range(HW_description["memory"]["levels"]):
-            self.tiling_dimensions["L{}".format(level+1)] = {}
-            self.tiling_dimensions["L{}".format(level+1)]["weights_dimensions"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["input_dimensions"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["output_dimensions"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["weight_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["bias_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["constants_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["input_activation_memory"] = None
-            self.tiling_dimensions["L{}".format(level+1)]["output_activation_memory"] = None
+            lvl = "L{}".format(level+1)
+            self.tiling_dimensions[lvl] = {}
+            self.tiling_dimensions[lvl]["weights_dimensions"] = None
+            self.tiling_dimensions[lvl]["input_dimensions"] = None
+            self.tiling_dimensions[lvl]["output_dimensions"] = None
+            self.tiling_dimensions[lvl]["weight_memory"] = None
+            self.tiling_dimensions[lvl]["bias_memory"] = None
+            self.tiling_dimensions[lvl]["constants_memory"] = None
+            self.tiling_dimensions[lvl]["input_activation_memory"] = None
+            self.tiling_dimensions[lvl]["output_activation_memory"] = None
         if not isinstance(self.name, type(None)):
             if "Convolution" in self.name or "FullyConnected" in self.name:
-                self.tiling_dimensions["L{}".format(level+1)]["weights_dimensions"] = [self.output_channels, self.input_channels]
-        self.tiling_dimensions["L{}".format(level+1)]["input_dimensions"] = [self.input_channels] + self.input_dimensions
-        self.tiling_dimensions["L{}".format(level+1)]["output_dimensions"] = [self.output_channels] + self.output_dimensions
-        self.tiling_dimensions["L{}".format(level+1)]["weight_memory"] = self.weight_memory
-        self.tiling_dimensions["L{}".format(level+1)]["bias_memory"] = self.bias_memory
-        self.tiling_dimensions["L{}".format(level+1)]["constants_memory"] = self.constants_memory
-        self.tiling_dimensions["L{}".format(level+1)]["input_activation_memory"] = self.input_activation_memory
-        self.tiling_dimensions["L{}".format(level+1)]["output_activation_memory"] = self.output_activation_memory
+                self.tiling_dimensions[lvl]["weights_dimensions"] = [self.output_channels, self.input_channels]
+        self.tiling_dimensions[lvl]["input_dimensions"] = [self.input_channels] + self.input_dimensions
+        self.tiling_dimensions[lvl]["output_dimensions"] = [self.output_channels] + self.output_dimensions
+        self.tiling_dimensions[lvl]["weight_memory"] = self.weight_memory
+        self.tiling_dimensions[lvl]["bias_memory"] = self.bias_memory
+        self.tiling_dimensions[lvl]["constants_memory"] = self.constants_memory
+        self.tiling_dimensions[lvl]["input_activation_memory"] = self.input_activation_memory
+        self.tiling_dimensions[lvl]["output_activation_memory"] = self.output_activation_memory
         self.HW_description = HW_description
         self.check_sum_w = None
         self.check_sum_in = None
@@ -71,7 +73,11 @@ class HW_node(DORY_node):
     def create_tiling_dimensions(self, previous_node, config_file):
         #  ATTENTION MEMORY L3 --> TILE MEMORY DIMENSION --> Decide how to set. Re-init the whole memory?
         for level in np.arange(self.HW_description["memory"]["levels"],1, -1):
-            (weights_dim, input_dims, output_dims) = self.Tiler(self, previous_node, config_file["code reserved space"]).get_tiling(level)
+            (weights_dim, input_dims, output_dims) = self.Tiler(
+                    self, 
+                    previous_node, 
+                    config_file["code reserved space"]
+                ).get_tiling(level)
             self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"] = input_dims
             self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"] = output_dims
             if "Convolution" in self.name or "FullyConnected" in self.name:
@@ -82,19 +88,19 @@ class HW_node(DORY_node):
                 #channel numbers
                 groups = self.group if all(self.group <= d for d in weights_dim) else max(weights_dim)
 
-                self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = np.prod(weights_dim)/groups*np.prod(self.kernel_shape)*self.weight_bits/8
+                self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = np.prod(weights_dim) / groups * np.prod(self.kernel_shape) * self.weight_bits / 8
             else:
                 self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = 0
             constants_memory = 0
             bias_memory = 0
             for name in self.constant_names:
                 if name in ["l","k"]:
-                    constants_memory+=weights_dim[0]*self.constant_bits/8
+                    constants_memory += weights_dim[0] * self.constant_bits / 8
                 if "bias" in name:
                     if groups == 1:
-                        bias_memory+=weights_dim[0]*self.bias_bits/8
+                        bias_memory += weights_dim[0] * self.bias_bits / 8
                     else:
-                        bias_memory+=weights_dim[0]*self.bias_bits/8*16
+                        bias_memory += weights_dim[0] * self.bias_bits / 8 * 16
 
             self.tiling_dimensions["L{}".format(level-1)]["bias_memory"] = int(bias_memory)
             self.tiling_dimensions["L{}".format(level-1)]["constants_memory"] = int(constants_memory)
@@ -112,17 +118,41 @@ class HW_node(DORY_node):
                             self.constant_names[i] = "weights"
 
     @staticmethod
-    def _compress(x, bits):
-        compressed = []
+    def _compress(x, bits, signed=False):
+        """
+        Packs an array of integers (x) into bytes, supporting signed or unsigned formats.
+
+        Args:
+            x (np.ndarray): Input array of integer values (e.g. int8, int16, etc.)
+            bits (int): Number of bits per element (1, 2, 4, 8)
+            signed (bool): Whether the input values are signed (two’s complement)
+
+        Returns:
+            np.ndarray (dtype=np.uint8): Packed byte array
+        """
         n_elements_in_byte = 8 // bits
-        i_element_in_byte = 0
-        x_masked = x & ((2**bits) - 1)
-        x_reshaped_masked = x_masked.reshape((-1, n_elements_in_byte))
-        po2 = 2**(np.arange(n_elements_in_byte) * bits)
-        po2 = np.tile(po2, (x_reshaped_masked.shape[0], 1))
-        x_reshaped_masked_scaled = x_reshaped_masked * po2
-        x_out = np.sum(x_reshaped_masked_scaled, axis=1).flatten().astype(np.uint8)
-        return x_out
+        max_val = 2**(bits - 1) - 1 if signed else 2**bits - 1
+        min_val = -2**(bits - 1) if signed else 0
+
+        # Clamp to valid range
+        x = np.clip(x, min_val, max_val).astype(np.int32)
+
+        if signed:
+            # Convert negative values to two’s complement form
+            x = np.where(x < 0, x + (1 << bits), x)
+
+        # Mask and reshape
+        x_masked = x & ((1 << bits) - 1)
+        x_reshaped = x_masked.reshape((-1, n_elements_in_byte))
+
+        # Prepare scaling factors (powers of two)
+        po2 = 2 ** (np.arange(n_elements_in_byte) * bits)
+        po2 = np.tile(po2, (x_reshaped.shape[0], 1))
+
+        # Combine bits into packed bytes
+        packed = np.sum(x_reshaped * po2, axis=1).astype(np.uint8)
+
+        return packed
 
     @staticmethod
     def _to_uint8(x, bits):
@@ -156,9 +186,10 @@ class HW_node(DORY_node):
             else:
                 self.__dict__[weight_name]["value"] = self.__dict__[weight_name]["value"].flatten()
             # self.__dict__[weight_name+"_raw"] = self.__dict__[weight_name]
-            self.__dict__[weight_name]["value"] = self.__dict__[weight_name]["value"].astype(np.uint8)
+            signed = self.__dict__[weight_name]["value"].min() < 0.0
+            self.__dict__[weight_name]["value"] = self.__dict__[weight_name]["value"].astype(np.int8 if signed else np.uint8)
             if self.weight_bits != 8:
-                self.__dict__[weight_name]["value"] = self._compress(self.__dict__[weight_name]["value"], self.weight_bits)
+                self.__dict__[weight_name]["value"] = self._compress(self.__dict__[weight_name]["value"], self.weight_bits, signed)
             self.check_sum_w += sum(self.__dict__[weight_name]["value"])
 
         bias_name = ""
@@ -195,9 +226,6 @@ class HW_node(DORY_node):
             self.check_sum_w += sum(self.l["value"])
 
     def add_checksum_activations_integer(self, load_directory, node_number, n_inputs=1):
-        ###########################################################################
-        ###### SECTION 4: GENERATE CHECKSUM BY USING OUT_LAYER{i}.TXT FILES  ######
-        ###########################################################################
         self.check_sum_in = []
         self.check_sum_out = []
         for in_idx in range(n_inputs):

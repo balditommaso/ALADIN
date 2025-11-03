@@ -35,7 +35,7 @@ class Tiler_PULP:
     def get_tiling(self, level):
         # This function is used to create the tiling of either a convolutional layer or
         # a fully connected or a pooling layer. The relu is included automatically in conv/FC.
-        if 'Conv' in self.HW_node.name or  'FullyConnected' in self.HW_node.name:
+        if 'Conv' in self.HW_node.name or 'FullyConnected' in self.HW_node.name:
             return Tiler_Conv2D(self).get_tiling(level)
         elif 'Pool' in self.HW_node.name:
             return Tiler_Pool2D(self).get_tiling(level)

@@ -84,7 +84,13 @@ def network_generate(
     # Including and running the transformation from Onnx to a DORY compatible graph
     onnx_manager = import_module(f'dory.Frontend_frameworks.{frontend}.Parser')
     onnx_to_dory = onnx_manager.onnx_manager
-    graph = onnx_to_dory(onnx_file, conf, prefix, verbose=verbose_level != "None").full_graph_parsing()
+    graph = onnx_to_dory(
+        onnx_file, 
+        conf, 
+        net_prefix=prefix, 
+        config_dir=confdir, 
+        verbose=verbose_level != "None"
+    ).full_graph_parsing()
 
     dory_to_c(
         graph, 

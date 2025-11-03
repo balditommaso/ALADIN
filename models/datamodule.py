@@ -38,6 +38,8 @@ class MNISTDataModule(pl.LightningDataModule):
             transforms.ToTensor(),
             transforms.Normalize(MNIST_mean, MNIST_std)
         ])
+        
+        self.setup(None)
 
     def setup(self, stage: str = None):
         torch.manual_seed(self.seed)
