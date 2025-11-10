@@ -121,16 +121,35 @@ class Layer_node(DORY_node):
 
     def add_memory_and_MACs(self):
         if "Convolution" in self.name or "FullyConnected" in self.name:
-            self.add_existing_parameter("MACs", int(np.prod(self.output_dimensions)*self.output_channels*self.input_channels*np.prod(self.kernel_shape)/self.group))
+            self.add_existing_parameter("MACs", int(
+                    np.prod(self.output_dimensions) * self.output_channels * self.input_channels * np.prod(self.kernel_shape) / self.group
+                )
+            )
             if self.group == 1:
-                self.add_existing_parameter("weight_memory", int(self.output_channels*self.input_channels*np.prod(self.kernel_shape)/self.group*self.weight_bits/8))
+                self.add_existing_parameter("weight_memory", int(
+                        self.output_channels * self.input_channels * np.prod(self.kernel_shape) / self.group * self.weight_bits / 8
+                    )
+                )
             else:
-                self.add_existing_parameter("weight_memory", int(self.output_channels*self.input_channels*np.prod(self.kernel_shape)/self.group*16*self.weight_bits/8))
+                self.add_existing_parameter("weight_memory", int(
+                        self.output_channels * self.input_channels * np.prod(self.kernel_shape) / self.group * 16 * self.weight_bits / 8
+                    )
+                )
         else:
             self.add_existing_parameter("MACs", int(0))
             self.add_existing_parameter("weight_memory", int(0))
-        self.add_existing_parameter("input_activation_memory", int(np.prod(self.input_dimensions)*self.input_channels*self.input_activation_bits/8))
-        self.add_existing_parameter("output_activation_memory", int(np.prod(self.output_dimensions)*self.output_channels*self.output_activation_bits/8))
+            
+        if self.implementation == "lut":
+            self.add_existing_parameter("MACs", int(0))
+            
+        self.add_existing_parameter("input_activation_memory", int(
+            np.prod(self.input_dimensions) * self.input_channels * self.input_activation_bits / 8
+            )
+        )
+        self.add_existing_parameter("output_activation_memory", int(
+            np.prod(self.output_dimensions) * self.output_channels * self.output_activation_bits / 8
+            )
+        )
         constants_memory = 0
         bias_memory = 0
         for name in self.constant_names:
@@ -141,7 +160,7 @@ class Layer_node(DORY_node):
         if self.group == 1:
             self.add_existing_parameter("bias_memory", int(bias_memory))
         else:
-            self.add_existing_parameter("bias_memory", int(bias_memory*16))
+            self.add_existing_parameter("bias_memory", int(bias_memory * 16))
         self.add_existing_parameter("constants_memory", int(constants_memory))
 
 

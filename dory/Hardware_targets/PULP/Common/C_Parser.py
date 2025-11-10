@@ -43,16 +43,38 @@ class C_Parser_PULP(Parser_HW_to_C):
         perf_layer, 
         precision_library, 
         app_directory, 
-        n_inputs=1
+        n_inputs=1,
+        L1_capacity=None,
+        L2_capacity=None
     ):
 
         file_path = self.get_file_path()
         with open(os.path.join(file_path, "HW_description.json")) as f:
             HW_description = json.load(f)
-        self.precision_library = C_Parser_PULP._auto_precision_library(graph) if precision_library == "auto" else precision_library
+            
+        if L1_capacity is not None:
+            HW_description["memory"]["L1"]["dimension"] = L1_capacity
+            
+        if L2_capacity is not None:
+            HW_description["memory"]["L2"]["dimension"] = L2_capacity
+            
+        if precision_library == "auto":
+            self.precision_library = C_Parser_PULP._auto_precision_library(graph) 
+        else:
+            self.precision_library = precision_library
+            
         self.source_Constant_bits_library = config_file["BNRelu_bits"]
         self.config_file = config_file
-        super().__init__(graph, os.path.join(config_file_dir, os.path.dirname(config_file["onnx_file"])), HW_description, verbose_level, perf_layer, "Makefile", app_directory, n_inputs)
+        super().__init__(
+            graph, 
+            os.path.join(config_file_dir, os.path.dirname(config_file["onnx_file"])), 
+            HW_description, 
+            verbose_level, 
+            perf_layer, 
+            "Makefile", 
+            app_directory, 
+            n_inputs
+        )
         try:
             db = HW_description['double_buffering']
         except KeyError:

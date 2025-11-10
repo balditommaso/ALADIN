@@ -96,7 +96,8 @@ RUN     source /dory_env/bin/activate && \
         python3 -m pip uninstall -y torch torchvision && \
         python3 -m pip install torch torchvision && \
         python3 -m pip install brevitas pytorch-lightning tensorboard && \
-        python3 -m pip install argcomplete pyelftools
+        python3 -m pip install argcomplete pyelftools && \
+        python3 -m pip install matplotlib
 
 
 ARG USERNAME=dory

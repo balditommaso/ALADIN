@@ -60,6 +60,7 @@ class HW_node(DORY_node):
         self.tiling_dimensions[lvl]["constants_memory"] = self.constants_memory
         self.tiling_dimensions[lvl]["input_activation_memory"] = self.input_activation_memory
         self.tiling_dimensions[lvl]["output_activation_memory"] = self.output_activation_memory
+        
         self.HW_description = HW_description
         self.check_sum_w = None
         self.check_sum_in = None
@@ -78,19 +79,23 @@ class HW_node(DORY_node):
                     previous_node, 
                     config_file["code reserved space"]
                 ).get_tiling(level)
-            self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"] = input_dims
-            self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"] = output_dims
+            self.tiling_dimensions[f"L{level-1}"]["input_dimensions"] = input_dims
+            self.tiling_dimensions[f"L{level-1}"]["output_dimensions"] = output_dims
             if "Convolution" in self.name or "FullyConnected" in self.name:
-                self.tiling_dimensions["L{}".format(level-1)]["weights_dimensions"] = weights_dim
+                self.tiling_dimensions[f"L{level-1}"]["weights_dimensions"] = weights_dim
                 #groups = self.group if self.group < weights_dim[0] else
                 #weights_dim[0] # not really correct: If we tile a grouped
                 #conv, the effective number of groups is the higher of the two
                 #channel numbers
                 groups = self.group if all(self.group <= d for d in weights_dim) else max(weights_dim)
 
-                self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = np.prod(weights_dim) / groups * np.prod(self.kernel_shape) * self.weight_bits / 8
+                self.tiling_dimensions[f"L{level-1}"]["weight_memory"] = np.prod(weights_dim) / groups * np.prod(self.kernel_shape) * self.weight_bits / 8
+                lut_dim = 0
+                if self.implementation == "lut" and (level - 1) == 1:
+                    lut_dim = 2 ** (self.weight_bits + self.input_activation_bits) * self.bias_bits
+                self.tiling_dimensions[f"L{level-1}"]["lut_memory"] = lut_dim
             else:
-                self.tiling_dimensions["L{}".format(level-1)]["weight_memory"] = 0
+                self.tiling_dimensions[f"L{level-1}"]["weight_memory"] = 0
             constants_memory = 0
             bias_memory = 0
             for name in self.constant_names:
@@ -102,10 +107,11 @@ class HW_node(DORY_node):
                     else:
                         bias_memory += weights_dim[0] * self.bias_bits / 8 * 16
 
-            self.tiling_dimensions["L{}".format(level-1)]["bias_memory"] = int(bias_memory)
-            self.tiling_dimensions["L{}".format(level-1)]["constants_memory"] = int(constants_memory)
-            self.tiling_dimensions["L{}".format(level-1)]["input_activation_memory"] = np.prod(self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"])*self.input_activation_bits/8
-            self.tiling_dimensions["L{}".format(level-1)]["output_activation_memory"] = np.prod(self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"])*self.output_activation_bits/8
+            
+            self.tiling_dimensions[f"L{level-1}"]["bias_memory"] = int(bias_memory)
+            self.tiling_dimensions[f"L{level-1}"]["constants_memory"] = int(constants_memory)
+            self.tiling_dimensions[f"L{level-1}"]["input_activation_memory"] = np.prod(self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"])*self.input_activation_bits/8
+            self.tiling_dimensions[f"L{level-1}"]["output_activation_memory"] = np.prod(self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"])*self.output_activation_bits/8
 
     def rename_weights(self):
         weight_name = ""

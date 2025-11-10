@@ -276,6 +276,7 @@ void ${prefix}network_run_cluster(void *args)
 
 % if 'Yes' in performance:
     print_perf(Layers_name[i], perf_cyc, NODEs_MACS[i]);
+    log_perf_csv(Layers_name[i], perf_cyc, NODEs_MACS[i]);
 % endif
 
     // 3-way swap: the old output is the new input

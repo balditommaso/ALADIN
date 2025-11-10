@@ -11,6 +11,13 @@ void print_perf(const char *name, const int cycles, const int macs)
   printf("  - n. of Cores: %d\n\n", NUM_CORES);
 }
 
+void log_perf_csv(const char *layer_name, const int cycles, const int macs)
+{
+  float perf = (float) macs / cycles;
+  printf("PERF_LOG,%s,%d,%d,%.6f,%d\n",
+         layer_name, macs, cycles, perf, NUM_CORES);
+}
+
 void checksum(const char *name, const uint8_t *d, size_t size, uint32_t sum_true) 
 {
   uint32_t sum = 0;
@@ -28,18 +35,18 @@ void checksum(const char *name, const uint8_t *d, size_t size, uint32_t sum_true
 void print_layer_args(unsigned int *args)
 {
   printf("===== Args dump =====\n");
-  printf("l3_x        = 0x%08X\n", args[0]);
-  printf("l3_y        = 0x%08X\n", args[1]);
-  printf("l3_W        = 0x%08X\n", args[2]);
-  printf("l2_x        = 0x%08X\n", args[3]);
-  printf("l2_x_2      = 0x%08X\n", args[4]);
-  printf("l2_y        = 0x%08X\n", args[5]);
-  printf("l2_W        = 0x%08X\n", args[6]);
-  printf("l1_buffer   = 0x%08X\n", args[7]);
-  printf("hyperram    = 0x%08X\n", args[8]);
-  printf("out_mult_in = %u\n", args[9]);
-  printf("out_shift_in= %u\n", args[10]);
-  printf("=====================\n");
+  printf("l3_x         = 0x%08X\n", args[0]);
+  printf("l3_y         = 0x%08X\n", args[1]);
+  printf("l3_W         = 0x%08X\n", args[2]);
+  printf("l2_x         = 0x%08X\n", args[3]);
+  printf("l2_x_2       = 0x%08X\n", args[4]);
+  printf("l2_y         = 0x%08X\n", args[5]);
+  printf("l2_W         = 0x%08X\n", args[6]);
+  printf("l1_buffer    = 0x%08X\n", args[7]);
+  printf("hyperram     = 0x%08X\n", args[8]);
+  printf("out_mult_in  = %u\n", args[9]);
+  printf("out_shift_in = %u\n", args[10]);
+  printf("======================\n");
 }
 
 void print_DMA_transfer(DMA_copy *copy, const char *label, unsigned L2_base_addr, unsigned L1_base_addr)

@@ -37,7 +37,6 @@ def run_network(network_args, appdir='./application'):
         pytest.fail(f"Test timed out after 360s.\nPartial STDOUT:\n{e.output}\nSTDERR:\n{e.stderr}")
 
     output = proc.stdout
-    print(output)  # captured unless run with -s
 
     match = re.search(r"Final output[^\n]*:\s*\n?([-\d\s]+)", output)
     if not match:

@@ -38,17 +38,38 @@ def dory_to_c(
     optional, 
     appdir, 
     n_inputs,
-    verify_checksum
+    verify_checksum,
+    L1_capacity,
+    L2_capacity
 ) -> None:
     # Including and running the transformation from DORY IR to DORY HW IR
     onnx_manager = import_module(f'dory.Hardware_targets.{target}.HW_Parser')
     dory_to_dory_hw = onnx_manager.onnx_manager
-    graph = dory_to_dory_hw(graph, conf, confdir, n_inputs, verify_checksum).full_graph_parsing()
+    graph = dory_to_dory_hw(
+        graph, 
+        conf, 
+        confdir, 
+        n_inputs, 
+        verify_checksum,
+        L1_capacity,
+        L2_capacity
+    ).full_graph_parsing()
 
     # Deployment of the model on the target architecture
     onnx_manager = import_module(f'dory.Hardware_targets.{target}.C_Parser')
     dory_hw_to_c = onnx_manager.C_Parser
-    dory_hw_to_c(graph, conf, confdir, verbose_level, perf_layer, optional, appdir, n_inputs).full_graph_parsing()
+    dory_hw_to_c(
+        graph, 
+        conf, 
+        confdir, 
+        verbose_level, 
+        perf_layer, 
+        optional, 
+        appdir, 
+        n_inputs,
+        L1_capacity,
+        L2_capacity
+    ).full_graph_parsing()
 
 
 def network_generate(
@@ -57,6 +78,8 @@ def network_generate(
     conf_file: str, 
     verbose_level: str = 'Check_all+Perf_final', 
     perf_layer: str = 'No', 
+    L1_capacity: int = None,
+    L2_capacity: int = None,
     optional: str = 'auto',
     appdir: str = './application', 
     prefix: str = ""
@@ -102,7 +125,9 @@ def network_generate(
         optional, 
         appdir, 
         n_inputs, 
-        verify_checksum=frontend != "QONNX"
+        frontend != "QONNX",
+        L1_capacity,
+        L2_capacity
     )
 
 
@@ -123,7 +148,8 @@ if __name__ == '__main__':
                              "Last+Perf_final: all check + final performances \n"
                              "Extract the parameters from the onnx model")
     parser.add_argument('--perf_layer', action='store_true', help='Print the performance of each layer.')
-
+    parser.add_argument("--L1_capacity", type=int, default=None, help="Capacity of the L1 memory.")
+    parser.add_argument("--L2_capacity", type=int, default=None, help="Capacity of the L2 memory.")
     parser.add_argument('--optional', default='auto', choices=optional_choices,
                         help='auto (based on layer precision, 8bits or mixed-sw), 8bit, mixed-hw, mixed-sw')
     parser.add_argument('--app_dir', default='./application', help='Path to the generated application. Default: ./application')
@@ -137,6 +163,8 @@ if __name__ == '__main__':
         args.config_file, 
         args.verbose_level, 
         'Yes' if args.perf_layer else 'No',
+        args.L1_capacity,
+        args.L2_capacity,
         args.optional, 
         args.app_dir, 
         args.prefix

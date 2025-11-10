@@ -39,7 +39,9 @@ class onnx_manager_PULP(Parser_DORY_to_HW):
         config_file, 
         config_file_dir, 
         n_inputs = 1, 
-        verify_checksum = True
+        verify_checksum = True,
+        L1_capacity = None,
+        L2_capacity = None
     ):
         layers_supported_by_HW_Backend_IR = ["Convolution", "Pooling", "FullyConnected", "Addition", "QAddition"]
         layers_supported_by_HW_Backend_IR+= ["ReluConvolution", "ReluPooling", "ReluFullyConnected", "ReluAddition", "ReluQAddition"]
@@ -51,6 +53,11 @@ class onnx_manager_PULP(Parser_DORY_to_HW):
         with open(os.path.join(file_path, "HW_description.json")) as f:
             HW_description = json.load(f)
 
+        if L1_capacity is not None:
+            HW_description["memory"]["L1"]["dimension"] = L1_capacity
+            
+        if L2_capacity is not None:
+            HW_description["memory"]["L2"]["dimension"] = L2_capacity
         
         try:
             db = HW_description['double_buffering']
