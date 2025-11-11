@@ -75,7 +75,9 @@ class Tiler_Add_PULP():
         ###############################################
         ##### PARAMETERS INITIALIZATION ###############
         ###############################################
-        L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
+        L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] \
+            - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] \
+            - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
         inp_dim = self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1:]
         out_dim = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1:]
         out_ch = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][0]

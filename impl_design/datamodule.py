@@ -115,11 +115,13 @@ class CIFAR10(datasets.CIFAR10):
         mean = CIFAR10_mean if center else [0., 0., 0.]
         std = CIFAR10_std if rescale else [1., 1., 1.]
         
-        transf_list = [transforms.ToTensor(), transforms.Normalize(mean, std)]
+        transf_list = []
         if train and augment:
             transf_list.append(transforms.RandomCrop(32, padding=4))
             transf_list.append(transforms.RandomHorizontalFlip())
-
+            transf_list.append(transforms.ColorJitter(0.2, 0.2, 0.2, 0.1))
+            
+        transf_list.extend([transforms.ToTensor(), transforms.Normalize(mean, std)])
         transform = transforms.Compose(transf_list)
         super().__init__(root=root, train=train, transform=transform, download=download)
 

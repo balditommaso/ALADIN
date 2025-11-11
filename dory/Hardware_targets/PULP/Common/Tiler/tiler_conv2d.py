@@ -377,8 +377,8 @@ class Tiler_Conv2D_PULP():
         # L2 tiling memory footprint
         in_mem = self.HW_node.tiling_dimensions["L2"]["input_activation_memory"]
         out_mem = self.HW_node.tiling_dimensions["L2"]["output_activation_memory"]
-        h_in   = self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1]
-        h_out   = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1]
+        h_in = self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1]
+        h_out = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1]
         if self.n_memory_levels > 2:
             L3_out_w = self.HW_node.tiling_dimensions["L3"]["output_dimensions"][1]
             L2_out_w = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1]
@@ -530,23 +530,20 @@ class Tiler_Conv2D_PULP():
             constants_tile_dimension = 0
             
 
-        constraint_all = sum((
-            self.HW_node.tiling_dimensions["L2"]["bias_memory"],
-            input_tile_dimension,
-            output_tile_dimension,
-            weight_tile_dimension,
-            constants_tile_dimension,
-            im2col_dimension,
-            lut_dim,
-            weight_full_prec_dimension,
+        constraint_all = (self.HW_node.tiling_dimensions["L2"]["bias_memory"] + 
+            input_tile_dimension + 
+            output_tile_dimension + 
+            weight_tile_dimension + 
+            constants_tile_dimension + 
+            im2col_dimension + 
+            lut_dim + 
+            weight_full_prec_dimension + 
             40
-        )) 
+        )
+        
 
         solver.Add(constraint_all <= L1_memory)
 
-        ###############################################
-        ##### HEURISTICS ADDITION #####################
-        ###############################################
         obj_expr = solver.IntVar(0, 1000000000000, "obj_expr")
         heuristics = 0
 

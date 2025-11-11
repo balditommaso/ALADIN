@@ -7,18 +7,28 @@
             32,
             32
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            2,
+            2
+        ],
         "weight_shape": [
             24,
             3,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             24
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             24,
             16,
@@ -57,7 +67,7 @@
             16,
             16
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_1": {
         "type": "Conv",
@@ -67,18 +77,28 @@
             16,
             16
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             24,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             24
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             24,
             16,
@@ -117,7 +137,7 @@
             16,
             16
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_2": {
         "type": "Conv",
@@ -127,18 +147,28 @@
             16,
             16
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             24,
             24,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             24
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             24,
             16,
@@ -177,7 +207,7 @@
             16,
             16
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_3": {
         "type": "Conv",
@@ -187,18 +217,28 @@
             16,
             16
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             24,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             24
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             24,
             16,
@@ -237,7 +277,7 @@
             16,
             16
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_4": {
         "type": "Conv",
@@ -247,18 +287,28 @@
             16,
             16
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             48,
             24,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             48
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             48,
             16,
@@ -297,7 +347,7 @@
             16,
             16
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_5": {
         "type": "Conv",
@@ -307,18 +357,28 @@
             16,
             16
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            2,
+            2
+        ],
         "weight_shape": [
             48,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             48
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             48,
             8,
@@ -357,7 +417,7 @@
             8,
             8
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_6": {
         "type": "Conv",
@@ -367,18 +427,28 @@
             8,
             8
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             48,
             48,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             48
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             48,
             8,
@@ -417,7 +487,7 @@
             8,
             8
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_7": {
         "type": "Conv",
@@ -427,18 +497,28 @@
             8,
             8
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             48,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             48
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             48,
             8,
@@ -477,7 +557,7 @@
             8,
             8
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_8": {
         "type": "Conv",
@@ -487,18 +567,28 @@
             8,
             8
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             96,
             48,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             96
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             96,
             8,
@@ -537,7 +627,7 @@
             8,
             8
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_9": {
         "type": "Conv",
@@ -547,18 +637,28 @@
             8,
             8
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             96,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             96
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             96,
             8,
@@ -597,7 +697,7 @@
             8,
             8
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_10": {
         "type": "Conv",
@@ -607,18 +707,28 @@
             8,
             8
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             96,
             96,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             96
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             96,
             8,
@@ -657,7 +767,7 @@
             8,
             8
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_11": {
         "type": "Conv",
@@ -667,18 +777,28 @@
             8,
             8
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            2,
+            2
+        ],
         "weight_shape": [
             96,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             96
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             96,
             4,
@@ -717,7 +837,7 @@
             4,
             4
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_12": {
         "type": "Conv",
@@ -727,18 +847,28 @@
             4,
             4
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             192,
             96,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             192
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             192,
             4,
@@ -777,7 +907,7 @@
             4,
             4
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_13": {
         "type": "Conv",
@@ -787,18 +917,28 @@
             4,
             4
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             192,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             192
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             192,
             4,
@@ -837,7 +977,7 @@
             4,
             4
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_14": {
         "type": "Conv",
@@ -847,18 +987,28 @@
             4,
             4
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             192,
             192,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             192
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             192,
             4,
@@ -897,7 +1047,7 @@
             4,
             4
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_15": {
         "type": "Conv",
@@ -907,18 +1057,28 @@
             4,
             4
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            2,
+            2
+        ],
         "weight_shape": [
             192,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             192
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             192,
             2,
@@ -957,7 +1117,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_16": {
         "type": "Conv",
@@ -967,18 +1127,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             384,
             192,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             384
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             384,
             2,
@@ -1017,7 +1187,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_17": {
         "type": "Conv",
@@ -1027,18 +1197,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             384,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             384
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             384,
             2,
@@ -1077,7 +1257,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_18": {
         "type": "Conv",
@@ -1087,18 +1267,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             384,
             384,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             384
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             384,
             2,
@@ -1137,7 +1327,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_19": {
         "type": "Conv",
@@ -1147,18 +1337,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             384,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             384
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             384,
             2,
@@ -1197,7 +1397,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_20": {
         "type": "Conv",
@@ -1207,18 +1407,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             384,
             384,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             384
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             384,
             2,
@@ -1257,7 +1467,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_21": {
         "type": "Conv",
@@ -1267,18 +1477,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             384,
             1,
             3,
             3
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             384
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             384,
             2,
@@ -1317,7 +1537,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Conv_22": {
         "type": "Conv",
@@ -1327,18 +1547,28 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
+        "padding": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "stride": [
+            1,
+            1
+        ],
         "weight_shape": [
             768,
             384,
             1,
             1
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             768
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             768,
             2,
@@ -1377,7 +1607,7 @@
             2,
             2
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "GlobalAveragePool_0": {
         "type": "GlobalAveragePool",
@@ -1387,13 +1617,13 @@
             2,
             2
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
         "output_shape": [
             768,
             1,
             1
         ],
-        "output_bitwidth": 32
+        "output_bitwidth": 8
     },
     "Trunc_0": {
         "type": "Trunc",
@@ -1403,31 +1633,31 @@
             1,
             1
         ],
-        "input_bitwidth": 32,
+        "input_bitwidth": 8,
         "channel-wise": false,
         "output_shape": [
             768,
             1,
             1
         ],
-        "output_bitwidth": 4
+        "output_bitwidth": 8
     },
     "Gemm_0": {
         "type": "Gemm",
-        "implementation": "lut",
+        "implementation": "default",
         "input_shape": [
             768
         ],
-        "input_bitwidth": 4,
+        "input_bitwidth": 8,
         "weight_shape": [
             10,
             768
         ],
-        "weight_bitwidth": 4,
+        "weight_bitwidth": 8,
         "bias_shape": [
             10
         ],
-        "bias_bitwidth": 16,
+        "bias_bitwidth": 32,
         "output_shape": [
             10
         ],

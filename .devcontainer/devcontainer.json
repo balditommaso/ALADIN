@@ -4,7 +4,7 @@
 
   "runArgs": [
     "--gpus", "all",
-    "--cpus=8"
+    "--cpus=10"
   ],
 
 

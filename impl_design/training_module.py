@@ -31,7 +31,7 @@ class VisionModel(pl.LightningModule):
 
 
     def configure_optimizers(self):
-        optimizer = SGD(self.parameters(), lr=self.learning_rate)
+        optimizer = SGD(self.parameters(), lr=self.learning_rate, weight_decay=5e-4)
 
         if self.scheduler == "step":
             scheduler = StepLR(optimizer, step_size=15, gamma=0.1)

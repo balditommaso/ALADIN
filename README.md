@@ -18,47 +18,59 @@ Experimets
 ---------
 1. Train the network:
 ```
-cd models
+cd impl_design
 python training.py --save_dir ./checkpoint \
-  --dataset MNIST \
-  --model dummy_cnn \
-  --file_name dummy_cnn \
-  --lr 0.01 \
-  --batch_size 1024 \
-  --num_workers 2 \
+  --dataset cifar-10 \
+  --model mobilenet_v1 \
+  --file_name MV1 \
+  --lr 0.05 \
+  --batch_size 128 \
+  --num_workers 4 \
   --seed 42 \
-  --epochs 10 \
-  --scheduler cosine
+  --epochs 300 \
+  --scheduler cosine \
+  --save_json
 cd ..
 ```
+This command will generate a JSON file where the user can specify the inforamtion for the quantization process.
 
 2. Apply QAT to a network:
 ```
-cd models
+cd impl_design
 python qat.py --save_dir ./checkpoint \
-  --model_path ./checkpoint/dummy_cnn.ckpt \
-  --dataset MNIST \
-  --model dummy_cnn \
-  --config_path ./checkpoint/dummy_cnn_mix_bit.json \
-  --file_name dummy_cnn_mix_bit \
+  --model_path ./checkpoint/MV1.ckpt \
+  --dataset cifar-10 \
+  --model mobilenet_v1 \
+  --config_path ./checkpoint/MV1_mix_4_8bit.json \
+  --file_name quant_MV1_4bit \
   --lr 0.001 \
-  --batch_size 1024 \
-  --num_workers 2 \
+  --batch_size 128 \
+  --num_workers 4 \
   --seed 42 \
-  --epochs 1 \
+  --epochs 50 \
   --scheduler cosine \
   --save_onnx
 cd ..
 ```
+This command will generate the QONNX file that will be used from Dory for the parsing and it generate a JSON file that can be used by to specify the *implementation* choice of each operation.
 
+3. Run implementation aware analysis:
+```
+cd impl_design
+python impl_design.py ./checkpoint/<implementation info>.json \
+  profile.csv
+cd ..
+```
+This will generate the CSV and plots realtively to the implementation information
 
-Examples
---------
-To download the examples built on DORY, clone the internal dory_example submodule (it should be automatically previously downloaded).
-Then, you can run one example from the library with the following command:
+4. Run implementation design search:
 ```
-python3 network_generate.py NEMO PULP.PULP_gvsoc ./dory/dory_examples/config_files/config_NEMO_MV1.json --app_dir ./application/
+source docker_util/docker_pulp_sdk.sh
+python platform_design/design_search.py ./checkpoint/<implementation info>.json \
+  profile.csv
 ```
+This will generate the CSV and plots realtively to the platform performances
+ 
 
 
 ### Reference

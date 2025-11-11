@@ -9,7 +9,7 @@ from typing import *
 from plot import *
 
 NUM_CORES = [8, 4, 2]
-L1_MEM = [16000, 32000, 64000,]
+L1_MEM = [32000, 48000, 64000]
 L2_MEM = [128000, 256000, 512000]
 
 
@@ -18,6 +18,7 @@ def arg_parser() -> Dict:
     
     parser.add_argument('config_file', type=str, help='Path to the JSON file that specifies the ONNX file of the network and other information.')
     parser.add_argument('result_file', type=str, default="./perf_analysis.csv", help='Name of the final CSV file.')
+    parser.add_argument('--prefix', type=str, default='', help='Prefix for the naming')
 
     args = parser.parse_args()
     return args
@@ -36,7 +37,8 @@ def sum_componenets(tile: Dict) -> int:
 
 def main(args: Dict) -> None:
     
-    csv_path = os.path.join("./platform_design/", args.result_file)
+    csv_path = os.path.join("./platform_design/analysis", args.result_file)
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["layer_name", "MACs", "num_cycles", "MAC_per_cycle", "num_cores", "L1_mem", "L2_mem", "L1_tiling", "L2_tiling"])
@@ -104,7 +106,12 @@ def main(args: Dict) -> None:
                                 ])
                                 
     
-    plot_performance(csv_path, "./performance.png")                            
+    plot_performance(csv_path, f"../platform_design/image/{args.prefix}performance.png") 
+    plot_performance(csv_path, f"../platform_design/image/{args.prefix}cycle_by_core.png", "num_cores")  
+    plot_performance(csv_path, f"../platform_design/image/{args.prefix}cycle_by_L2.png", "L2_mem") 
+    
+    plot_memory(csv_path, f"../platform_design/image/{args.prefix}memory.png", "L2_mem")                          
+                         
 
 if __name__ == "__main__":
     args = arg_parser()

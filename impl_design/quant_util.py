@@ -9,6 +9,8 @@ from quant_strategy import *
 from qonnx.transformation.base import Transformation
 from qonnx.util.cleanup import cleanup_model
 from qonnx.core.modelwrapper import ModelWrapper
+from qonnx.util.basic import get_by_name
+
 
 
 MODULES = (
@@ -179,6 +181,10 @@ class ExtractInfo(Transformation):
             if node.op_type in ["Conv", "Gemm", "Matmul"]:
                 w_shape = model.get_tensor_shape(node.input[1])
                 quant_node = model.find_producer(node.input[1])
+                if node.op_type == "Conv":
+                    strides = list(get_by_name(node.attribute, "strides").ints)
+                    padding = list(get_by_name(node.attribute, "pads").ints)
+                    elem_dict[node.name].update({"padding": padding, "stride": strides})
                 if quant_node.op_type != "Quant":
                     raise ValueError(f"Weight not quantized! ({node.name})")
                 w_bit_width = model.get_initializer(quant_node.input[3])
@@ -204,11 +210,12 @@ class ExtractInfo(Transformation):
                 is_channel_wise = model.get_initializer(node.input[4]).size > 1
                 elem_dict[node.name].update({"channel-wise": is_channel_wise})
                 
+            elif node.op_type in ["GlobalAveragePool", "AveragePool"]:
+                o_bit_width = i_bit_width
                 
             elem_dict[node.name].update({"output_shape": list(o_shape)[1:], "output_bitwidth": int(o_bit_width)})
             
             # next node
-            
             node = model.find_consumer(node.output[0])
             i_bit_width = o_bit_width
             
