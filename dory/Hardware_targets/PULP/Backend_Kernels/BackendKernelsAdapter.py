@@ -130,7 +130,11 @@ class PulpMixedAdapter(PulpNNAdapter):
             + str(self.node.get_parameter("weight_bits"))
         )
         if "Conv" in self.node.name and self.node.group > 1:
-            src_files.append(f"Depthwise/{maybe_x}pulp_nn_depthwise{in_out_weights}.c")
+            if self.node.implementation == "lut":
+                src_files.append(f"Depthwise/{maybe_x}pulp_nn_depthwise_lut{in_out_weights}.c")
+            else:
+                src_files.append(f"Depthwise/{maybe_x}pulp_nn_depthwise{in_out_weights}.c")
+            
         elif "Conv" in self.node.name and self.node.group == 1:
             if self.node.conv1d and self._type == "hw":
                 src_files.append(f"Convolution/xpulp_nn_conv1d{in_out_weights}.c")

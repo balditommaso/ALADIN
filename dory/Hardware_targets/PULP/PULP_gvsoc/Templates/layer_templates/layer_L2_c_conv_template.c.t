@@ -487,7 +487,7 @@ void ${func_name}(void *args)
 % elif flag_DW == 1 and optional_type == '8bit':
     pulp_nn_depthwise_generic(
 % elif flag_DW == 1 and 'mixed' in optional_type:
-    ${"x" if 'hw' in optional_type else ""}pulp_nn_depthwise_${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
+    ${"x" if 'hw' in optional_type else ""}pulp_nn_depthwise_${'lut_' if flag_LUT else ''}${data_type_x[0]}${x_data_size_byte}_${data_type_y[0]}${y_data_size_byte}_${data_type_weights[0]}${W_data_size_byte}(
 % endif
 ## passing the right arguments
 % if 'Gemm' in func_name or 'FullyConnected' in func_name:

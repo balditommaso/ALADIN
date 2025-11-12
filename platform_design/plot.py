@@ -2,6 +2,22 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+# Uses the same COLOR_PALETTE from your previous code
+COLOR_PALETTE = [
+    "#1a80bb",  # strong blue
+    "#ea801c",  # vivid orange
+    "#2ca02c",  # green
+    "#d62728",  # red
+    "#9467bd",  # purple
+    "#8c564b",  # brown
+    "#e377c2",  # pink
+    "#7f7f7f",  # gray
+    "#bcbd22",  # olive
+    "#17becf",  # cyan
+]
+
+
 def _fmt_config_label(cfg_val, compare_by=None):
     # nicely format config labels when compare_by is a mem column
     if compare_by == 'L1_mem' or compare_by == 'L2_mem':
@@ -87,7 +103,7 @@ def plot_performance(file_path, dst_path, compare_by=None, fill_missing=np.nan, 
         plt.xlabel("Layer")
         plt.ylabel("Number of Cycles")
         plt.title("Layer-wise Performance Comparison by Configuration")
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.legend()
         plt.tight_layout()
         plt.savefig(dst_path)
         plt.close()
@@ -164,7 +180,7 @@ def plot_memory(file_path, dst_path, compare_by=None, fill_missing=np.nan, max_c
             plt.xlabel("Layer")
             plt.ylabel("Memory (kB)")
             plt.title(f"{title_suffix} by Configuration")
-            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            plt.legend()
             plt.tight_layout()
             plt.savefig(dst_path.replace(".png", f"_{title_suffix.replace(' ', '_')}.png"))
             plt.close()
@@ -172,3 +188,57 @@ def plot_memory(file_path, dst_path, compare_by=None, fill_missing=np.nan, max_c
     # make both plots
     _plot_one('L1_tiling_kB', 'L1 Tiling')
     _plot_one('L2_tiling_kB', 'L2 Tiling')
+    
+    
+    
+
+
+def plot_metric_comparison(file_path, metric, group_by="Config", cores=8, l1=64, l2=512, compare_by="Case",
+                           dst_path="plot.png", fill_missing=np.nan, max_groups=None):
+    """
+    Compare metric values (e.g. MACs, BOPs, Memory_kB) across cases for fixed configurations.
+    
+    Parameters:
+        file_path: CSV path with columns ['Layers', metric, group_by, compare_by]
+        metric: 'MACs', 'BOPs', 'Memory', etc.
+        group_by: column to fix (e.g. 'Config', 'Layer', 'Block')
+        compare_by: column to compare (e.g. 'Case')
+        fill_missing: np.nan or 0 — how to handle missing entries
+        max_groups: limit number of groups plotted (useful for large models)
+        dst_path: output file for saved plot
+    """
+    df = pd.read_csv(file_path)
+    df = df[(df["L1_mem"] == (l1*1000)) & (df["L2_mem"] == (l2*1000)) & (df["num_cores"] == cores)]
+
+    df['L1_tiling'] = df['L1_tiling'] / 1000.0
+    df['L2_tiling'] = df['L2_tiling'] / 1000.0
+    # Build pivot (rows = group_by, columns = compare_by)
+    pivot = df.pivot_table(index=group_by, columns=compare_by, values=metric, aggfunc='mean')
+
+    # Maintain original order
+    pivot = pivot.reindex(index=pd.unique(df[group_by]))
+
+    # Optionally limit number of groups
+    if max_groups:
+        pivot = pivot.iloc[:max_groups]
+
+    cases = list(pivot.columns)
+    x = np.arange(len(pivot.index))
+    width = 0.8 / max(1, len(cases))
+    colors = [COLOR_PALETTE[i % len(COLOR_PALETTE)] for i in range(len(cases))]
+
+    plt.style.use("default")
+    plt.figure(figsize=(max(10, len(x) * 0.25), 6))
+    for i, case in enumerate(cases):
+        y = pivot[case].values
+        y_plot = np.where(np.isnan(y) & np.isnan(fill_missing), np.nan,
+                          np.nan_to_num(y, nan=fill_missing))
+        plt.bar(x + i * width, y_plot, width=width, label=str(case), color=colors[i])
+
+    plt.xticks(x + width * (len(cases) - 1) / 2, pivot.index, rotation=90)
+    plt.ylabel(metric if "tiling" not in metric else f"{metric} [kB]")
+    plt.title(f"{metric} Comparison Across Cases by {group_by}")
+    plt.legend(title=compare_by)
+    plt.tight_layout()
+    plt.savefig(dst_path)
+    plt.close()

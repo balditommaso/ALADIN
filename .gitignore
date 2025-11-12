@@ -18,3 +18,7 @@ pulp_nn_network_test.txt
 HW_description.json
 */HW_description.json
 .pytest_cache
+*image
+analysis
+impl_design/analysis/*.csv
+impl_design/image/*.png

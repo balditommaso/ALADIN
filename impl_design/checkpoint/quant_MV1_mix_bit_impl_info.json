@@ -909,9 +909,12 @@
         ],
         "output_bitwidth": 4
     },
+
+
+
     "Conv_13": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             192,
             4,
@@ -964,7 +967,7 @@
     },
     "Quant_60": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             192,
             4,
@@ -981,7 +984,7 @@
     },
     "Conv_14": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             192,
             4,
@@ -1034,7 +1037,7 @@
     },
     "Quant_61": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             192,
             4,
@@ -1051,7 +1054,7 @@
     },
     "Conv_15": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             192,
             4,
@@ -1104,7 +1107,7 @@
     },
     "Quant_62": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             192,
             2,
@@ -1121,7 +1124,7 @@
     },
     "Conv_16": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             192,
             2,
@@ -1174,7 +1177,7 @@
     },
     "Quant_63": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             384,
             2,
@@ -1191,7 +1194,7 @@
     },
     "Conv_17": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             384,
             2,
@@ -1244,7 +1247,7 @@
     },
     "Quant_64": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             384,
             2,
@@ -1261,7 +1264,7 @@
     },
     "Conv_18": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             384,
             2,
@@ -1314,7 +1317,7 @@
     },
     "Quant_65": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             384,
             2,
@@ -1331,7 +1334,7 @@
     },
     "Conv_19": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             384,
             2,
@@ -1384,7 +1387,7 @@
     },
     "Quant_66": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             384,
             2,
@@ -1401,7 +1404,7 @@
     },
     "Conv_20": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             384,
             2,
@@ -1454,7 +1457,7 @@
     },
     "Quant_67": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             384,
             2,
@@ -1471,7 +1474,7 @@
     },
     "Conv_21": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             384,
             2,
@@ -1520,7 +1523,7 @@
     },
     "Quant_68": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             384,
             2,
@@ -1537,7 +1540,7 @@
     },
     "Conv_22": {
         "type": "Conv",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             384,
             2,
@@ -1586,7 +1589,7 @@
     },
     "Quant_69": {
         "type": "Quant",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             768,
             2,
@@ -1619,7 +1622,7 @@
     },
     "Trunc_0": {
         "type": "Trunc",
-        "implementation": "default",
+        "implementation": "thresholds",
         "input_shape": [
             768,
             1,
@@ -1636,7 +1639,7 @@
     },
     "Gemm_0": {
         "type": "Gemm",
-        "implementation": "default",
+        "implementation": "lut",
         "input_shape": [
             768
         ],
