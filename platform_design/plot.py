@@ -70,7 +70,8 @@ def plot_performance(file_path, dst_path, compare_by=None, fill_missing=np.nan, 
 
         plt.xticks(x + width*(n_configs-1)/2, pivot.index, rotation=90)
         plt.xlabel("Layer")
-        plt.ylabel("Number of Cycles")
+        plt.ylabel("Number of Cycles (log scale)")
+        plt.yscale("log")
         plt.title(f"Layer-wise Performance Comparison by {compare_by}")
         plt.legend()
         plt.tight_layout()
@@ -236,8 +237,12 @@ def plot_metric_comparison(file_path, metric, group_by="Config", cores=8, l1=64,
         plt.bar(x + i * width, y_plot, width=width, label=str(case), color=colors[i])
 
     plt.xticks(x + width * (len(cases) - 1) / 2, pivot.index, rotation=90)
+    metric = metric.replace("_", " ")
+    plt.title(f"{metric} Comparison Across Cases by Layers")
+    if "cycle" in metric:
+        plt.yscale("log")
+        metric += " (log scale)"
     plt.ylabel(metric if "tiling" not in metric else f"{metric} [kB]")
-    plt.title(f"{metric} Comparison Across Cases by {group_by}")
     plt.legend(title=compare_by)
     plt.tight_layout()
     plt.savefig(dst_path)
