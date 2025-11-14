@@ -1,8 +1,10 @@
 Mixed-precision QNN co-design tool for MCU
 ===================================
+This is a HW-SW co-design tool build on top of DORY project.
+The tool guides the user from the design of the quantized neural networks up to the deployment
+on the target device. 
 
-DORY is an automatic tool to deploy DNNs on low-cost MCUs with typically less than 1MB of on-chip SRAM memory. 
-
+*NOTE*: We are not part the code is currently anonimized because the related paper is under review.
 
 Installation
 ------------
@@ -74,7 +76,7 @@ This will generate the CSV and plots realtively to the platform performances
 
 
 ### Reference
-Project build on top of DORY tool, please make sure to cite also their paper: https://ieeexplore.ieee.org/document/9381618 (preprint available also at https://arxiv.org/abs/2008.07127)
+*We are NOT the developers of DORY project*, however if you are interested please consider to cite also their paper: https://ieeexplore.ieee.org/document/9381618 (preprint available also at https://arxiv.org/abs/2008.07127)
 ```
 @article{burrello2020dory,
   author={A. {Burrello} and A. {Garofalo} and N. {Bruschi} and G. {Tagliavini} and D. {Rossi} and F. {Conti}},
@@ -93,4 +95,4 @@ Project build on top of DORY tool, please make sure to cite also their paper: ht
 
 
 ### License
-Project and DORY are released under Apache 2.0, see the LICENSE file in the root of this repository for details.
+This project and DORY are released under Apache 2.0, see the LICENSE file in the root of this repository for details.

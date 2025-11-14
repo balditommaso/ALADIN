@@ -108,7 +108,8 @@ def main(args: Dict) -> None:
                                             sum_componenets(tiling_info["L1"]),
                                             sum_componenets(tiling_info["L2"])
                                         ])
-                                    
+    
+    os.makedirs("./platform_design/image/", exist_ok=True)                               
     for idx in range(1, len(args.config_files)):
         case_name = f"Case {idx}"
         for L1_mem in L1_MEM:
