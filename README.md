@@ -4,7 +4,7 @@ This is a HW-SW co-design tool build on top of DORY project.
 The tool guides the user from the design of the quantized neural networks up to the deployment
 on the target device. 
 
-*NOTE*: We are not part the code is currently anonimized because the related paper is under review.
+*NOTE*: The code is currently anonymized because the related paper is under review. Part of the code refers to the SoA Dory project, which we are not part of, and hence it could not be anonymized.
 
 Installation
 ------------
