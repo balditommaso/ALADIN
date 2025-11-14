@@ -16,6 +16,13 @@ cd mixed-precision-dory
 docker build -t dory-docker:3.9 ./.devcontainer/ 
 ```
 
+3. Once connected to the terminal of the container run the following commands:
+```
+source docker_util/docker_pulp_sdk.sh
+pip install argcomplete pyelftools
+```
+*NOTE: these packages cannot be installed from the Dockerfile*
+
 Experimets
 ---------
 1. Train the network:
