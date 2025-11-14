@@ -59,8 +59,7 @@ This command will generate the QONNX file that will be used from Dory for the pa
 3. Run implementation aware analysis:
 ```
 cd impl_design
-python impl_design.py ./checkpoint/<implementation info>.json \
-  profile.csv
+python impl_design.py --config_files <list of config files> 
 cd ..
 ```
 This will generate the CSV and plots realtively to the implementation information
@@ -68,11 +67,11 @@ This will generate the CSV and plots realtively to the implementation informatio
 4. Run implementation design search:
 ```
 source docker_util/docker_pulp_sdk.sh
-python platform_design/design_search.py ./checkpoint/<implementation info>.json \
-  profile.csv
+python platform_design/design_search.py --config_files <list of config files> 
 ```
 This will generate the CSV and plots realtively to the platform performances
  
+*NOTE: you can find config files already available in the repo*
 
 
 ### Reference
