@@ -1,19 +1,4 @@
-# C_Parser.py
-# Alessio Burrello <alessio.burrello@unibo.it>
-# 
-# Copyright (C) 2019-2020 University of Bologna
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+
 
 import os
 import numpy as np
@@ -21,10 +6,12 @@ from collections import OrderedDict
 from mako.template import Template
 
 from dory.Parsers.HW_node import HW_node
-from dory.Hardware_targets.PULP.Common import C_Parser_PULP
+from dory.Hardware_targets.PULP.Common import C_Parser_PULP
+
 import dory.Utils.Templates_writer.writer_utils as utils
 
-class C_Parser(C_Parser_PULP):
+class C_Parser(C_Parser_PULP):
+
 
     def get_file_path(self):
         return "/".join(os.path.realpath(__file__).split("/")[:-1])
