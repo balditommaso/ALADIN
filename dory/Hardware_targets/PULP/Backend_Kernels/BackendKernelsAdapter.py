@@ -190,7 +190,7 @@ class PulpNNXAdapter(BackendKernelsAdapter):
 
     def _check_valid_node(self, node: HW_node) -> None:
         if self.accelerator_name == "ne16":
-            assert True  # TODO
+            assert True  
 
     def _get_ne16_src_files(self) -> List[str]:
         return ["src/pulp_nnx_ne16.c", "ne16/hal/ne16_hal.c"]

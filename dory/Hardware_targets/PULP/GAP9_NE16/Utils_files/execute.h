@@ -52,8 +52,7 @@ static inline void execute_stride2x2_blocking(nnx_task_t *task, Layer tile,
 
 static inline void execute_wait(nnx_task_t *task) {
 #if __PLATFORM__ == ARCHI_PLATFORM_GVSOC && defined GAP_SDK
-  // Temporary hack because the gvsoc model of ne16 in gap_sdk
-  // has a broken running_id.
+  
   while(!ne16_empty())
     ;
 #else

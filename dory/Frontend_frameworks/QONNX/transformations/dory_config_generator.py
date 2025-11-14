@@ -11,7 +11,6 @@ class DoryConfigParser(BaseTrasformation):
     Generate the config file espected by DORY for the parsing
     and edit it based on the QONNX model informations
     
-    TODO: handle 2-bit quantization
     """
     
     def __init__(self, config: Dict[str, Any], code_size: int = 150000, verbose: bool = False):

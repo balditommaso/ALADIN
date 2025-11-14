@@ -17,6 +17,16 @@ COLOR_PALETTE = [
     "#17becf",  # cyan
 ]
 
+figsize = (12, 4)
+
+FONTS = {
+    "title": 18,
+    "label": 16,
+    "ticks": 14,
+    "legend": 14,
+}
+
+
 
 def _align_cases(df, value_col, compare_by):
     """Align all cases by the CSV order of Layers, fill missing with 0."""
@@ -44,7 +54,6 @@ def plot_macs(file_path, dst_path, compare_by="Case"):
     df["Layers"] = df["Layers"].str.replace(r"^GlobalAveragePool_", "avgpool_", regex=True)
 
     plt.style.use("default")
-    figsize = (12, 4)
 
     if compare_by and compare_by in df.columns:
         layers, cases, aligned = _align_cases(df, "MACs", compare_by)
@@ -52,9 +61,9 @@ def plot_macs(file_path, dst_path, compare_by="Case"):
         width = 0.8 / len(cases)
         colors = _get_colors(len(cases))
 
-        plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
         for i, subset in enumerate(aligned):
-            plt.bar(
+            ax.bar(
                 x + i * width,
                 subset["MACs"],
                 width=width,
@@ -62,20 +71,22 @@ def plot_macs(file_path, dst_path, compare_by="Case"):
                 color=colors[i],
             )
 
-        plt.xticks(x + width * (len(cases) - 1) / 2, layers, rotation=90)
-        plt.ylabel("MACs")
-        plt.title("MACs per Layer (comparison)")
-        plt.legend(title=compare_by)
+        ax.set_xticks(x + width * (len(cases) - 1) / 2)
+        ax.set_xticklabels(layers, rotation=90, fontsize=FONTS["ticks"])
+        ax.set_ylabel("MACs", fontsize=FONTS["label"])
+        ax.set_title("MACs per Layer (comparison)", fontsize=FONTS["title"])
+        ax.legend(title=compare_by, fontsize=FONTS["legend"], title_fontsize=FONTS["legend"])
     else:
-        plt.figure(figsize=figsize)
-        plt.bar(df["Layers"], df["MACs"], color=COLOR_PALETTE[0])
-        plt.xticks(rotation=90)
-        plt.ylabel("MACs")
-        plt.title("MACs per Layer")
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.bar(df["Layers"], df["MACs"], color=COLOR_PALETTE[0])
+        ax.set_xticklabels(df["Layers"], rotation=90, fontsize=FONTS["ticks"])
+        ax.set_ylabel("MACs", fontsize=FONTS["label"])
+        ax.set_title("MACs per Layer", fontsize=FONTS["title"])
 
     plt.tight_layout()
     plt.savefig(dst_path)
-    plt.close()
+    plt.close(fig)
+
 
 
 def plot_bops(file_path, dst_path, compare_by="Case"):
@@ -85,7 +96,6 @@ def plot_bops(file_path, dst_path, compare_by="Case"):
     df["Layers"] = df["Layers"].str.replace(r"^GlobalAveragePool_", "avgpool_", regex=True)
 
     plt.style.use("default")
-    figsize = (12, 4)
 
     if compare_by and compare_by in df.columns:
         layers, cases, aligned = _align_cases(df, "BOPs", compare_by)
@@ -93,9 +103,9 @@ def plot_bops(file_path, dst_path, compare_by="Case"):
         width = 0.8 / len(cases)
         colors = _get_colors(len(cases))
 
-        plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
         for i, subset in enumerate(aligned):
-            plt.bar(
+            ax.bar(
                 x + i * width,
                 subset["BOPs"],
                 width=width,
@@ -103,22 +113,23 @@ def plot_bops(file_path, dst_path, compare_by="Case"):
                 color=colors[i],
             )
 
-        plt.xticks(x + width * (len(cases) - 1) / 2, layers, rotation=90)
-        plt.yscale("log")
-        plt.ylabel("BOPs (log scale)")
-        plt.title("BOPs per Layer (comparison)")
-        plt.legend(title=compare_by)
+        ax.set_xticks(x + width * (len(cases) - 1) / 2)
+        ax.set_xticklabels(layers, rotation=90, fontsize=FONTS["ticks"])
+        ax.set_yscale("log")
+        ax.set_ylabel("BOPs (log scale)", fontsize=FONTS["label"])
+        ax.set_title("BOPs per Layer (comparison)", fontsize=FONTS["title"])
+        ax.legend(title=compare_by, fontsize=FONTS["legend"], title_fontsize=FONTS["legend"])
     else:
-        plt.figure(figsize=figsize)
-        plt.bar(df["Layers"], df["BOPs"], color=COLOR_PALETTE[0])
-        plt.xticks(rotation=90)
-        plt.yscale("log")
-        plt.ylabel("BOPs")
-        plt.title("BOPs per Layer")
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.bar(df["Layers"], df["BOPs"], color=COLOR_PALETTE[0])
+        ax.set_xticklabels(df["Layers"], rotation=90, fontsize=FONTS["ticks"])
+        ax.set_yscale("log")
+        ax.set_ylabel("BOPs", fontsize=FONTS["label"])
+        ax.set_title("BOPs per Layer", fontsize=FONTS["title"])
 
     plt.tight_layout()
     plt.savefig(dst_path)
-    plt.close()
+    plt.close(fig)
 
 
 def plot_memory(file_path, dst_path, compare_by="Case"):
@@ -129,7 +140,6 @@ def plot_memory(file_path, dst_path, compare_by="Case"):
     df["Memory_kB"] = df["Memory"] / 1000.0
 
     plt.style.use("default")
-    figsize = (12, 4)
 
     if compare_by and compare_by in df.columns:
         layers, cases, aligned = _align_cases(df, "Memory_kB", compare_by)
@@ -137,9 +147,9 @@ def plot_memory(file_path, dst_path, compare_by="Case"):
         width = 0.8 / len(cases)
         colors = _get_colors(len(cases))
 
-        plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
         for i, subset in enumerate(aligned):
-            plt.bar(
+            ax.bar(
                 x + i * width,
                 subset["Memory_kB"],
                 width=width,
@@ -147,17 +157,19 @@ def plot_memory(file_path, dst_path, compare_by="Case"):
                 color=colors[i],
             )
 
-        plt.xticks(x + width * (len(cases) - 1) / 2, layers, rotation=90)
-        plt.ylabel("Memory [kB]")
-        plt.title("Memory Footprint per Layer (comparison)")
-        plt.legend(title=compare_by)
+        ax.set_xticks(x + width * (len(cases) - 1) / 2)
+        ax.set_xticklabels(layers, rotation=90, fontsize=FONTS["ticks"])
+        ax.set_ylabel("Memory [kB]", fontsize=FONTS["label"])
+        ax.set_title("Memory Footprint per Layer (comparison)", fontsize=FONTS["title"])
+        ax.legend(title=compare_by, fontsize=FONTS["legend"], title_fontsize=FONTS["legend"])
     else:
-        plt.figure(figsize=figsize)
-        plt.bar(df["Layers"], df["Memory_kB"], color=COLOR_PALETTE[0])
-        plt.xticks(rotation=90)
-        plt.ylabel("Memory [kB]")
-        plt.title("Memory Footprint per Layer")
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.bar(df["Layers"], df["Memory_kB"], color=COLOR_PALETTE[0])
+        ax.set_xticklabels(df["Layers"], rotation=90, fontsize=FONTS["ticks"])
+        ax.set_ylabel("Memory [kB]", fontsize=FONTS["label"])
+        ax.set_title("Memory Footprint per Layer", fontsize=FONTS["title"])
 
     plt.tight_layout()
     plt.savefig(dst_path)
-    plt.close()
+    plt.close(fig)
+

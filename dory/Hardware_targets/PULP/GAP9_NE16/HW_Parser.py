@@ -56,9 +56,9 @@ class onnx_manager(onnx_manager_gap9):
                 in_type=IntegerType(name=f"{node.input_activation_type}{node.input_activation_bits}"),
                 out_type=IntegerType(name=f"{node.output_activation_type}{node.output_activation_bits}"),
                 weight_type=IntegerType(name=f"{node.weight_type}{node.weight_bits}"),
-                scale_type=IntegerType(name=f"uint{node.constant_bits}"), # TODO should it be constant_type?
+                scale_type=IntegerType(name=f"uint{node.constant_bits}"), 
                 bias_type=IntegerType(name=f"{node.constant_type}{node.bias_bits}"),
-                has_norm_quant=True, # TODO
+                has_norm_quant=True, #
                 has_bias=True,
                 has_relu=True
             )

@@ -70,9 +70,7 @@ class onnx_manager_PULP(Parser_DORY_to_HW):
         
             
         tiler = self.get_tiler()
-        #HACK GEORGR:
-        # keep the unified Tiler interface but pass the double_buffering
-        # parameter correctly by pre-supplying the argument
+
         tiler = partial(tiler, double_buffering=self.double_buffering)
         
         super().__init__(

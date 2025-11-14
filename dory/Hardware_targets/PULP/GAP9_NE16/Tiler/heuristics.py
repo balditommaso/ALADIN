@@ -117,7 +117,6 @@ def heuristic_l1(layer_in_shape, layer_out_shape,
     cin = layer_in_shape[2]
 
     return [
-        # TODO: Add heuristic that prefers more width tiles then height - less switching on borders
         maximize_divisibility_or_max_w_prio(tile_out_shape[0], subtile_out_shape[0],
                                             max=layer_out_shape[0], prio=5),
 

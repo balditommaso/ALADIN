@@ -1,22 +1,4 @@
-/*
- * network.c
- * Alessio Burrello <alessio.burrello@unibo.it>
- * Thorir Mar Ingolfsson <thoriri@iis.ee.ethz.ch>
- *
- * Copyright (C) 2019-2020 University of Bologna
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 <%
 l3_supported = DORY_HW_graph[0].HW_description['memory']['levels'] > 2
 %>\
@@ -218,7 +200,6 @@ void ${prefix}network_run_cluster(void *args)
 % else:
     L2_weights = Weights_name[i];
 % endif
-## TOM HACK: to avoid checksum when using QONNX
 % if 'Check_all' in verbose_level and render_checksum:
 #ifdef VERBOSE
 % if l3_supported:
@@ -289,7 +270,6 @@ void ${prefix}network_run_cluster(void *args)
 
 #ifdef VERBOSE
     printf("Layer %s %d ended: \n", Layers_name[i], i);
-## TOM HACK: avod checksum from models parsed from QONNX
 % if 'Check_all' in verbose_level and render_checksum:
 % if l3_supported:
     if (L3_output_layers[i] == 1) 
@@ -342,10 +322,8 @@ void ${prefix}network_run_cluster(void *args)
         cl_ram_free(layers_pointers[residual_number], bypass_dimension);
       }
 
-      // TODO I feel like this should look ahead instead of back
       if (i > 0 && branch_output[i-1] == 1 && L3_input_layers[i] == 1) 
       { 
-        // TODO don't understand this condition
         L3_input = cl_ram_malloc(1500000);
       }
       if (branch_output[i] == 1 && L3_output_layers[i] == 1) 

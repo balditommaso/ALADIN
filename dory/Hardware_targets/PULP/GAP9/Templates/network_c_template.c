@@ -341,7 +341,6 @@ void ${prefix}network_run_cluster(void *args) {
     pi_perf_start();
     % endif
 
-    // TODO: What error?
     // prevents error from compiler
     asm volatile("": : :"memory");
     unsigned int temp = L3_input;
@@ -405,8 +404,7 @@ void ${prefix}network_run_cluster(void *args) {
         cl_ram_free(layers_pointers[residual_number], bypass_dimension);
       }
 
-      // TODO I feel like this should look ahead instead of back
-      if (i > 0 && branch_output[i-1]==1 && L3_input_layers[i]==1) { // TODO don't understand this condition
+      if (i > 0 && branch_output[i-1]==1 && L3_input_layers[i]==1) { 
         L3_input = cl_ram_malloc(1500000);
       }
       if (branch_output[i]==1 && L3_output_layers[i]==1) {
