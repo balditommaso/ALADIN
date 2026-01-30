@@ -10,6 +10,14 @@ Installation
 ------------
 
 1. Clone the repository and the required submodules.
+
+(Optional) Enable also the FPGA flow by typing:
+```
+export VIVADO_HOME=<path to Vivado folder>
+export VIVADO_VERSION=<Vivado version>
+
+```
+
 2. Build the Dockerfile with the required SDKs and Python env
 ```
 cd mixed-precision-dory

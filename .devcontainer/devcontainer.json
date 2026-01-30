@@ -7,6 +7,17 @@
     "--cpus=10"
   ],
 
+ 
+  "mounts": [
+    "source=${localEnv:VIVADO_HOME},target=/opt/vivado,type=bind,consistency=cached"
+  ],
+
+  "remoteEnv": {
+    "VIVADO_HOME": "/opt/vivado",
+    "VIVADO_VERSION": "${localEnv:VIVADO_VERSION}",
+    "LANG": "en_US.UTF-8",
+    "LC_ALL": "en_US.UTF-8"
+  },
 
 
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/mixed-precision-dory,type=bind",

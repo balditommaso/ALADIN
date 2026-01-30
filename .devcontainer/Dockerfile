@@ -76,7 +76,7 @@ RUN     source /dory_env/bin/activate && \
         make all && \
 # PULP-NN TOOLCHAIN DOWNLOAD
         cd / && \
-        wget https://iis-nextcloud.ee.ethz.ch/s/aYESyR5W9FrHgYa/download/riscv-nn-toolchain.zip && \
+        wget https://retis.santannapisa.it/~tbaldi/download/riscv-nn-toolchain.zip && \
         unzip riscv-nn-toolchain
 # FINALIZE PYTHON VENV
 WORKDIR /gap_riscv_toolchain_ubuntu_18/gap_sdk/
@@ -98,6 +98,39 @@ RUN     source /dory_env/bin/activate && \
         python3 -m pip install brevitas pytorch-lightning tensorboard && \
         python3 -m pip install argcomplete pyelftools && \
         python3 -m pip install matplotlib
+
+# VIVADO FLOW
+RUN echo '\
+if [ -z "\$VIVADO_HOME\" ]; then\n\
+        echo \"[Vivado] WARNING: VIVADO_HOME not set. FPGA flow disabled.\" >&2\n\
+        return 0\n\
+fi\n\
+\n\
+if [ ! -d \"$VIVADO_HOME\" ]; then\n\
+        echo \"[Vivado] ERROR: VIVADO_HOME=$VIVADO_HOME does not exist\" >&2\n\
+        return 0\n\
+fi\n\
+\n\
+if [ ! -f \"$VIVADO_HOME/settings64.sh\" ]; then\n\
+        echo \"[Vivado] ERROR: Invalid Vivado install at $VIVADO_HOME\" >&2\n\
+        return 0\n\
+fi\n\
+\n\
+source \"$VIVADO_HOME/settings64.sh\"\n\
+export PATH=\"$VIVADO_HOME/bin:$PATH\"\n\
+\n\
+if [ -n \"$VIVADO_VERSION\" ]; then\n\
+        echo \"[Vivado] Enabled: version $VIVADO_VERSION\"\n\
+else\n\
+        echo \"[Vivado] Enabled at $VIVADO_HOME\"\n\
+fi' > /etc/profile.d/vivado.sh
+
+RUN apt-get update && apt-get install -y locales \
+    && locale-gen en_US.UTF-8 \
+    && update-locale LANG=en_US.UTF-8
+
+RUN apt-get update && apt-get install -y \
+    libtinfo5 libncurses5 libx11-6 libxext6 libxft2 libxrender1 libxrandr2 libglib2.0-0
 
 
 ARG USERNAME=dory
