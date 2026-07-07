@@ -22,3 +22,5 @@ HW_description.json
 analysis
 impl_design/analysis/*.csv
 impl_design/image/*.png
+
+.venv

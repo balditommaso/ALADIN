@@ -1,28 +1,6 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 
-# === COLOR PALETTE ===
-COLOR_PALETTE = [
-    "#1a80bb",  # strong blue
-    "#ea801c",  # vivid orange
-    "#2ca02c",  # green
-    "#d62728",  # red
-    "#9467bd",  # purple
-    "#8c564b",  # brown
-    "#e377c2",  # pink
-    "#7f7f7f",  # gray
-    "#bcbd22",  # olive
-    "#17becf",  # cyan
-]
 
-# === FONT SIZES ===
-FONTS = {
-    "title": 18,
-    "label": 16,
-    "ticks": 14,
-    "legend": 14,
-}
+
 
 def _fmt_config_label(cfg_val, compare_by=None):
     """Nicely format config labels when compare_by is a memory column."""

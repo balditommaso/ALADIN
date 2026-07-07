@@ -6,7 +6,6 @@ import os
 from argparse import RawTextHelpFormatter
 from network_generate import network_generate
 from typing import *
-from plot import *
 
 NUM_CORES = [8, 4, 2]
 L1_MEM = [64000]
@@ -109,48 +108,7 @@ def main(args: Dict) -> None:
                                             sum_componenets(tiling_info["L2"])
                                         ])
     
-    os.makedirs("./platform_design/image/", exist_ok=True)                               
-    for idx in range(1, len(args.config_files)):
-        case_name = f"Case {idx}"
-        for L1_mem in L1_MEM:
-            for L2_mem in L2_MEM:
-                for n_core in NUM_CORES:
-                    # plot_performance(csv_path, f"./platform_design/image/{args.prefix}_{case_name[-1]}_performance.png") 
-                    plot_performance(csv_path, f"./platform_design/image/{args.prefix}_{case_name[-1]}_cycle_by_core.png", "num_cores")  
-                    plot_performance(csv_path, f"./platform_design/image/{args.prefix}_{case_name[-1]}_cycle_by_L2.png", "L2_mem") 
-                    plot_memory(csv_path, f"./platform_design/image/{args.prefix}_{case_name[-1]}_memory.png", "L2_mem")  
-                    
-            
-        plot_metric_comparison(
-            file_path=csv_path,
-            metric="num_cycles",
-            cores=8,
-            l1=64,
-            l2=512,
-            group_by="layer_name",
-            compare_by="Case",
-            dst_path=f"./platform_design/image/{args.prefix}_num_cycles_case_comparison.png"
-        )           
-        plot_metric_comparison(
-            file_path=csv_path,
-            metric="L1_tiling",
-            cores=8,
-            l1=64,
-            l2=512,
-            group_by="layer_name",
-            compare_by="Case",
-            dst_path=f"./platform_design/image/{args.prefix}_L1_tilling_case_comparison.png"
-        )   
-        plot_metric_comparison(
-            file_path=csv_path,
-            metric="L2_tiling",
-            cores=8,
-            l1=64,
-            l2=512,
-            group_by="layer_name",
-            compare_by="Case",
-            dst_path=f"./platform_design/image/{args.prefix}_L2_tiling_case_comparison.png"
-        )                
+     
                          
 
 if __name__ == "__main__":
