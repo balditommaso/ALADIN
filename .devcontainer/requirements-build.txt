@@ -1,0 +1,7 @@
+# --- GAP SDK base requirements ---
+wheel
+scons
+Cython
+setuptools_rust
+argcomplete
+pyelftools

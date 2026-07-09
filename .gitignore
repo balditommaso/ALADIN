@@ -24,3 +24,6 @@ impl_design/analysis/*.csv
 impl_design/image/*.png
 
 .venv
+
+models/*
+output/*

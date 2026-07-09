@@ -12,14 +12,14 @@ Installation
 1. Clone the repository and the required submodules.
 2. Build the Dockerfile with the required SDKs and Python env
 ```
-cd mixed-precision-dory
-docker build -t dory-docker:3.9 ./.devcontainer/ 
+cd ALADIN
+docker buildx build -t dory-docker:3.9 ./.devcontainer/ 
 ```
 
 3. Once connected to the terminal of the container run the following commands:
 ```
+source /dory_env/bin/activate
 source docker_util/docker_pulp_sdk.sh
-pip install argcomplete pyelftools
 ```
 *NOTE: these packages cannot be installed from the Dockerfile*
 
@@ -41,7 +41,7 @@ python training.py --save_dir ./checkpoint \
   --save_json
 cd ..
 ```
-This command will generate a JSON file where the user can specify the inforamtion for the quantization process.
+This command will generate a JSON file where the user can specify the information for the quantization process.
 
 2. Apply QAT to a network:
 ```

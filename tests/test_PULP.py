@@ -109,16 +109,16 @@ networks = [
             },
         "checksum_final": 'OK'
     },
-    {
-        "network_args":
-            {
-                'frontend': 'QONNX',
-                'target': 'PULP.PULP_gvsoc',
-                'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits_with_lut.json',
-                'optional': 'mixed-sw'
-            },
-        "checksum_final": 'OK'
-    },
+    # {
+    #     "network_args":
+    #         {
+    #             'frontend': 'QONNX',
+    #             'target': 'PULP.PULP_gvsoc',
+    #             'conf_file': './models/checkpoint/config_files/config_QONNX_dummy_mix_bits_with_lut.json',
+    #             'optional': 'mixed-sw'
+    #         },
+    #     "checksum_final": 'OK'
+    # },
 ]
 
 

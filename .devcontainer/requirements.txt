@@ -1,0 +1,29 @@
+
+# --- Toolchain / build helpers ---
+python-dev-tools
+numpy
+onnx
+onnxscript
+onnxoptimizer
+future-fstrings
+pandas
+qonnx
+ortools
+mako
+pytest
+Pygments
+MarkupSafe
+prettytable
+
+# --- ML stack ---
+torch
+tensorboard
+
+# --- Misc ---
+argcomplete
+pyelftools
+matplotlib
+
+# Add any new dependency here, then just re-run:
+#   docker build -t dory .
+# Only this layer will rebuild — the toolchain build above it stays cached.
