@@ -3,28 +3,35 @@ SHELL   ["/bin/bash", "-c"]
 # Set non-interactive mode globally
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Python 3.10 is built from source rather than via apt/deadsnakes: deadsnakes
+# has dropped all package builds for Ubuntu Focal (20.04) since it reached
+# EOL in April 2025 — `apt-get install python3.10` there now fails with
+# "no installation candidate" regardless of PPA/key setup. Building from
+# source has no such dependency and works on any base.
 RUN apt-get update && \
-    apt-get install -y software-properties-common sudo gnupg curl ca-certificates && \
-    # Fetch the deadsnakes PPA signing key over plain HTTPS (port 443)
-    # instead of the keyserver protocol (port 11371), which frequently
-    # times out inside Docker builds — this is the standard, reliable fix.
-    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF23C5A6CF475977595C89F51BA6932366A755776" \
-        -o /tmp/deadsnakes.asc && \
-    gpg --dearmor -o /usr/share/keyrings/deadsnakes-archive-keyring.gpg /tmp/deadsnakes.asc && \
-    echo "deb [signed-by=/usr/share/keyrings/deadsnakes-archive-keyring.gpg] https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu focal main" \
-        > /etc/apt/sources.list.d/deadsnakes.list && \
-    apt-get update && \
-    apt-get install -y \
-        python3.9 \
-        python3.9-venv \
-        python3-pip \
+    apt-get install -y --no-install-recommends \
+        software-properties-common \
+        sudo \
         build-essential \
         git \
+        curl \
+        wget \
+        ca-certificates \
+        libssl-dev \
+        zlib1g-dev \
+        libncurses5-dev \
+        libncursesw5-dev \
+        libreadline-dev \
+        libffi-dev \
+        libsqlite3-dev \
+        libbz2-dev \
+        liblzma-dev \
+        tk-dev \
+        uuid-dev \
         libftdi-dev \
         libftdi1 \
         doxygen \
         libsdl2-dev \
-        curl \
         cmake \
         libusb-1.0-0-dev \
         gtkwave \
@@ -36,10 +43,19 @@ RUN apt-get update && \
         libtool \
         pkg-config \
         libsdl2-ttf-dev \
-        wget \
         unzip \
         sed && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+    cd /usr/src && \
+    curl -fsSL -O https://www.python.org/ftp/python/3.10.15/Python-3.10.15.tgz && \
+    tar -xf Python-3.10.15.tgz && \
+    cd Python-3.10.15 && \
+    ./configure --enable-optimizations --enable-shared --with-ensurepip=install && \
+    make -j"$(nproc)" && \
+    make altinstall && \
+    ldconfig && \
+    cd / && rm -rf /usr/src/Python-3.10.15* && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.10 1 && \
+    update-alternatives --set python3 /usr/local/bin/python3.10
 
 # GAP-SDK & TOOLCHAIN INSTALLATION
 # NOTE: this layer is expensive (builds openocd, riscv toolchain, gap_sdk,
@@ -126,13 +142,24 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-
+# /dory_env was created by root during the build steps above. The dev
+# container's postCreateCommand/postStartCommand run as $USERNAME, so it
+# needs write access to the venv (pip install, etc.) — hand it over here,
+# before switching USER below.
 RUN chown -R $USER_UID:$USER_GID /dory_env
 
 USER $USERNAME
 
-# Auto-activate the venv and GAP SDK env vars in every interactive shell
+# Auto-activate the venv in every shell — this is non-interactive/safe.
+#
+# We deliberately do NOT auto-source gap_sdk/sourceme.sh here: it prompts
+# interactively (`read`) for a board target. VS Code's Dev Containers
+# extension also spawns non-interactive probe shells that source .bashrc
+# (to capture PATH, etc.) — when one of those hits an interactive `read`,
+# it consumes whatever's next in that input stream instead of real
+# keyboard input, producing garbled errors. Instead, expose it as an
+# alias you run explicitly, once, in a real terminal when you need it.
 RUN echo "source /dory_env/bin/activate" >> /home/$USERNAME/.bashrc && \
-    echo "source /gap_riscv_toolchain_ubuntu_18/gap_sdk/sourceme.sh" >> /home/$USERNAME/.bashrc
+    echo "alias gap-init='source /gap_riscv_toolchain_ubuntu_18/gap_sdk/sourceme.sh'" >> /home/$USERNAME/.bashrc
 
 CMD ["/bin/bash"]

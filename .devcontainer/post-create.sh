@@ -3,7 +3,7 @@
 set -e
 
 source /dory_env/bin/activate
-python3 -m pip install --upgrade pip --quiet
+# python3 -m pip install --upgrade pip --quiet
 
 if [ -f "${containerWorkspaceFolder:-/workspaces/ALADIN}/requirements-dev.txt" ]; then
     echo "[postCreate] Installing requirements-dev.txt ..."
