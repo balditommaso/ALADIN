@@ -44,6 +44,7 @@ RUN apt-get update && \
         pkg-config \
         libsdl2-ttf-dev \
         unzip \
+        ssh \
         sed && \
     cd /usr/src && \
     curl -fsSL -O https://www.python.org/ftp/python/3.10.15/Python-3.10.15.tgz && \
