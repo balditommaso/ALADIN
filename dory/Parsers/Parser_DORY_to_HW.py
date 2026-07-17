@@ -21,9 +21,9 @@ class Parser_DORY_to_HW:
         Pattern_rewriter, 
         supported_nodes: List[str], 
         HW_description: Dict[str, Any], 
-        network_directory: str, 
         config_file: Dict[str, Any], 
         Tiler, 
+        network_directory: str = None, 
         n_inputs: int = 1,
         verify_checksum: bool = True
     ):
@@ -39,6 +39,7 @@ class Parser_DORY_to_HW:
         self.verify_checksum = verify_checksum
         HW_node.Tiler = Tiler
 
+
     def mapping_to_HW_nodes(self):
         print("\nBackend: Matching patterns from generated DORY ONNX to HW Nodes.")
         for i, node in enumerate(self.DORY_Graph):
@@ -46,14 +47,17 @@ class Parser_DORY_to_HW:
             if isinstance(string_matching, str):
                 self.DORY_Graph = self.Pattern_rewriter(self.DORY_Graph).execute(string_matching, indexes)
 
+
     def check_graph(self):
         for node in self.DORY_Graph:
             if node.name not in self.supported_nodes:
                 sys.exit("\nDORY Backend Check. Node {} is not accepted inside the HW Frontend IR.\n".format(node.name))
         print("\nDORY checking of the graph: OK\n")
 
+
     def check_parameters(self):
         print("\nTo be implemented in the target backend")
+
 
     def pattern_matching(self, input_node, input_index):
         number_of_nodes = 0
@@ -63,7 +67,10 @@ class Parser_DORY_to_HW:
             DORY_node_indexes = []
             DORY_node_indexes.append(input_index)
             if rule["number_of_nodes"] == 1 and input_node.name in rule["nodes_name"]:
-                rule_found = key
+                if number_of_nodes < rule["number_of_nodes"]:
+                    rule_found = key
+                    number_of_nodes = rule["number_of_nodes"]
+                    DORY_node_indexes_to_export = DORY_node_indexes
             elif input_node.name in rule["nodes_name"]:
                 node = input_node
                 match = 1
@@ -98,6 +105,7 @@ class Parser_DORY_to_HW:
                         number_of_nodes = rule["number_of_nodes"]
                         DORY_node_indexes_to_export = DORY_node_indexes
         return rule_found, DORY_node_indexes_to_export
+
 
     def update_branches_graph(self):
         print("\nDORY generic Frontend. Updating branches pointers.")
@@ -136,17 +144,22 @@ class Parser_DORY_to_HW:
                                 else:
                                     nodes_scan_2.add_existing_parameter("branch_last", 1)  
 
+
     def update_dimensions_graph(self):
         print("\nUpdating dimensions of vectors inside the graph, if they do not match among nodes")
         for i, node in enumerate(self.DORY_Graph):
             if i > 0:
                 if isinstance(self.DORY_Graph[i].input_channels, type(None)):
                     if "FullyConnected" in self.DORY_Graph[i].name:
-                        self.DORY_Graph[i].input_channels = int(self.DORY_Graph[i-1].output_channels*np.prod(self.DORY_Graph[i-1].output_dimensions))
+                        self.DORY_Graph[i].input_channels = int(
+                            self.DORY_Graph[i-1].output_channels * \
+                            np.prod(self.DORY_Graph[i-1].output_dimensions)
+                        )
                     else:
                         self.DORY_Graph[i].input_channels = self.DORY_Graph[i-1].output_channels
-                if len(self.DORY_Graph[i].input_dimensions)==0:
+                if len(self.DORY_Graph[i].input_dimensions) == 0:
                     self.DORY_Graph[i].input_dimensions = self.DORY_Graph[i-1].output_dimensions
+
 
     def add_tensors_memory_occupation_and_MACs(self):
         print("\nUpdating memory occupation and MACs of tensors in layers")
@@ -154,12 +167,15 @@ class Parser_DORY_to_HW:
             if "Convolution" in node.name or "FullyConnected" in node.name or "Add" in node.op_type or "Pooling" in node.name:
                 node.add_memory_and_MACs()
 
+
     def adjust_data_layout(self):
         print("\nTo be implemented in the target backend")
+
 
     # Override if you want to instanciate a different type of HW_node
     def transform_nodes_to_hw_nodes(self):
         self.DORY_Graph = [HW_node(node, self.HW_description) for node in self.DORY_Graph]
+
 
     def tiling(self):
         ####################################################################################
@@ -179,12 +195,14 @@ class Parser_DORY_to_HW:
         for i, node in enumerate(self.DORY_Graph):            
             node.rename_weights()           
 
+
     def formatting_constant_parameters_tensors_and_activations(self):
         print("\nDORY Backend: Formatting constants and adding checksums")
         for i, node in enumerate(self.DORY_Graph):            
             node.add_checksum_w_integer()           
-            if self.verify_checksum:
+            if self.verify_checksum and self.network_directory is not None:
                 node.add_checksum_activations_integer(self.network_directory, i, self.n_inputs)
+
 
     def full_graph_parsing(self):
         print("#####################################################")

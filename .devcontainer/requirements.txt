@@ -23,7 +23,7 @@ tensorboard
 argcomplete
 pyelftools
 matplotlib
-
+tqdm
 # Add any new dependency here, then just re-run:
 #   docker build -t dory .
 # Only this layer will rebuild — the toolchain build above it stays cached.

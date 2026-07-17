@@ -173,12 +173,13 @@ class onnx_manager(Parser_ONNX_to_DORY):
     def add_data_layout(self):
         print("\nQuantlab Frontend: Adding Data Layout.")
         for i, node in enumerate(self.DORY_Graph):
+            weights_name = None
             for name in node.constant_names:
                 if name not in ["l","k","outshift","outmul","outadd", "inmul1", "inmul2", "inshift1", "inshift2", "inadd1", "inadd2"]:
                     if "bias" not in name:
                         weights_name = name
-            if weights_name in node.__dict__:
-                if node.name in "FullyConnected":
+            if weights_name is not None and weights_name in node.__dict__:
+                if node.name in ["FullyConnected"]:
                     if node.__dict__[weights_name]["value"].shape[0] == node.input_channels:
                         node.__dict__[weights_name]["layout"] = "CinCout"
                     else:

@@ -40,12 +40,14 @@ class DORY_node:
         self.prefix = None
         self.implementation = None
 
+
     @property
     def prefixed_name(self):
         if self.name and self.prefix:
             return self.prefix + self.name
 
         return self.name
+
 
     def print_parameters(self):
         for parameter in self.__dict__:
@@ -54,34 +56,43 @@ class DORY_node:
             else:
                 print(parameter + ': Present')
 
+
     def add_existing_parameter(self, key, value):
         if key in self.__dict__:
             self.__dict__[key] = value
         else:
             sys.exit("Adding {} parameter to a graph node. This parameter does not exist. ".format(key))
 
+
     def add_existing_dict_parameter(self, dict_parameters):
         for key, value in dict_parameters.items():
             self.add_existing_parameter(key, value)
 
+
     def get_parameter(self, name):
         return self.__dict__[name]
+
 
     def check_uninitialized_parameters(self):
         for key, value in self.__dict__.items():
             if isinstance(value, type(None)) or (isinstance(value, list) and len(value) == 0):
-                sys.exit("DORY FRONTEND error. Missing some Node initialization. Stopping at argument {}".format(key))
+                sys.exit(
+                    f"DORY FRONTEND error. Missing some Node initialization. Stopping at argument {key}"
+                )
+
 
     def populate_DORY_node(self, node_iterating, graph, prefix=""):
         DORY_parameters = {}
         #### Names: Convolution, Addition, FullyConnected, Pooling
-        mapping_names = {'AveragePool': 'Pooling', 
-                         'MaxPool': 'Pooling', 
-                         'Conv': 'Convolution', 
-                         'Gemm': 'FullyConnected', 
-                         'MatMul': 'FullyConnected', 
-                         'GlobalAveragePool': 'Pooling', 
-                         'Add': 'Addition'}
+        mapping_names = {
+            'AveragePool': 'Pooling', 
+            'MaxPool': 'Pooling', 
+            'Conv': 'Convolution', 
+            'Gemm': 'FullyConnected', 
+            'MatMul': 'FullyConnected', 
+            'GlobalAveragePool': 'Pooling', 
+            'Add': 'Addition'
+        }
         if node_iterating.op_type in mapping_names.keys():
             DORY_parameters['name'] = mapping_names[node_iterating.op_type]
         else:
@@ -107,6 +118,7 @@ class DORY_node:
             self.name = node_iterating.op_type
 
         self.add_special_attributes(node_iterating)
+
 
     def add_constants(self, node_iterating, graph):
         '''
@@ -150,6 +162,7 @@ class DORY_node:
                 else:
                     sys.exit("DORY FRONTEND error. DORY does not find any values for the attribute {}".format(attribute.name))
 
+
     def export_to_dict(self):
         node_dict = {}
         node_dict["name"] = self.name
@@ -163,6 +176,7 @@ class DORY_node:
                 node_dict["Weights"][key]["Present"] = 'Yes'
                 node_dict["Weights"][key]["Layout"] = value["layout"]
         return node_dict
+
 
     def export_to_onnx(self):
         node_dict = {}

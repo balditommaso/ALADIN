@@ -67,12 +67,24 @@ class C_Parser(C_Parser_PULP):
         for in_idx in range(self.n_inputs):
             infile = 'input.txt' if self.n_inputs == 1 else f'input_{in_idx}.txt'
             try:
-                x_in = np.loadtxt(os.path.join(self.network_directory, infile), delimiter=',', dtype=np.uint8, usecols=[0])
+                x_in = np.loadtxt(
+                    os.path.join(self.network_directory, infile), 
+                    delimiter=',', 
+                    dtype=np.uint8, 
+                    usecols=[0]
+                )
             except FileNotFoundError:
-                print(f"========= WARNING ==========\nInput file {os.path.join(self.network_directory, 'input.txt')} not found; generating random inputs!")
-                x_in = np.random.randint(low=0, high=2*8,
-                                         size=self.group * self.input_channels * self.input_dimensions[0] * self.input_dimensions[1],
-                                         dtype=np.uint8)
+                print(
+                    f"========= WARNING ==========\n" \
+                    f"Input file {os.path.join(self.network_directory, 'input.txt')} not found; generating random inputs!"
+                )
+                x_in = np.random.randint(
+                    low=0, 
+                    high=2*8,
+                    size=self.group * self.input_channels * self.input_dimensions[0] * self.input_dimensions[1],
+                    dtype=np.uint8
+                )
+                
             x_in_l.append(x_in.flatten())
 
         x_in = np.concatenate(x_in_l)

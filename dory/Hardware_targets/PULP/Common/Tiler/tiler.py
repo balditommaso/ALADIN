@@ -6,12 +6,13 @@ from .tiler_add import Tiler_Add_PULP as Tiler_Add
 
 class Tiler_PULP:
     # Class to generate the Tiling of the layer.
-    def __init__(self, HW_node, previous_HW_node, code_reserved_space, double_buffering = 2):
+    def __init__(self, HW_node, previous_HW_node, code_reserved_space: int, double_buffering: int = 2):
         self.HW_node = HW_node
         self.previous_HW_node = previous_HW_node
         self.code_reserved_space = code_reserved_space
         self.double_buffering = double_buffering
         self.n_memory_levels = HW_node.HW_description['memory']['levels']
+
 
     def get_tiling(self, level):
         # This function is used to create the tiling of either a convolutional layer or

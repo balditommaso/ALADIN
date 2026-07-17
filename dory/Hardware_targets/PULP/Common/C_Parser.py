@@ -20,16 +20,16 @@ class C_Parser_PULP(Parser_HW_to_C):
     """
     def __init__(
         self, 
-        graph, 
-        config_file, 
-        config_file_dir, 
-        verbose_level, 
-        perf_layer, 
-        precision_library, 
-        app_directory, 
-        n_inputs=1,
-        L1_capacity=None,
-        L2_capacity=None
+        graph: list, 
+        config_file: dict[str, any], 
+        verbose_level: str, 
+        perf_layer: str, 
+        model_dir: str = None, 
+        precision_library: str = "auto", 
+        app_directory: str = "./application", 
+        n_inputs: int = 1,
+        L1_capacity: int = None,
+        L2_capacity: int = None
     ):
 
         file_path = self.get_file_path()
@@ -49,9 +49,10 @@ class C_Parser_PULP(Parser_HW_to_C):
             
         self.source_Constant_bits_library = config_file["BNRelu_bits"]
         self.config_file = config_file
+
         super().__init__(
             graph, 
-            os.path.join(config_file_dir, os.path.dirname(config_file["onnx_file"])), 
+            model_dir, 
             HW_description, 
             verbose_level, 
             perf_layer, 

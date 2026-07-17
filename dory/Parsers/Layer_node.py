@@ -62,7 +62,7 @@ class Layer_node(DORY_node):
         return Layer_parameters
 
     def populate_Layer_node(self, node_iterating, graph, prefix=""):
-        self.populate_DORY_node(node_iterating,graph)
+        self.populate_DORY_node(node_iterating, graph)
         Layer_parameters = {}
         Layer_parameters['prefix'] = prefix
         ## kernel_shape, dilations, group, strides, pads DEFAULTS
@@ -95,7 +95,7 @@ class Layer_node(DORY_node):
             Layer_parameters['kernel_shape'] = Layer_parameters['input_dimensions']
             Layer_parameters['strides'] = [1, 1]
         #### Adding control for layers with g > 1. Only DW (groups = input channels = output channels) and g=1 supported.
-        if Layer_parameters['group'] > 1:
+        if 'group' in Layer_parameters and Layer_parameters['group'] > 1:
             if not (Layer_parameters['group'] == Layer_parameters["output_channels"] == Layer_parameters["input_channels"]):
                 print(" Depthwise convolution with input channels != output channels != groups")
                 os._exit(0)
@@ -125,20 +125,20 @@ class Layer_node(DORY_node):
             self.add_existing_parameter("MACs", int(0))
             
         self.add_existing_parameter("input_activation_memory", int(
-            np.prod(self.input_dimensions) * self.input_channels * self.input_activation_bits / 8
+                np.prod(self.input_dimensions) * self.input_channels * self.input_activation_bits / 8
             )
         )
         self.add_existing_parameter("output_activation_memory", int(
-            np.prod(self.output_dimensions) * self.output_channels * self.output_activation_bits / 8
+                np.prod(self.output_dimensions) * self.output_channels * self.output_activation_bits / 8
             )
         )
         constants_memory = 0
         bias_memory = 0
         for name in self.constant_names:
             if name in ["l","k"]:
-                constants_memory+=self.output_channels*self.constant_bits/8
+                constants_memory += self.output_channels * self.constant_bits / 8
             if "bias" in name:
-                bias_memory+=self.output_channels*self.bias_bits/8
+                bias_memory += self.output_channels * self.bias_bits / 8
         if self.group == 1:
             self.add_existing_parameter("bias_memory", int(bias_memory))
         else:

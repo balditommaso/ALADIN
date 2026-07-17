@@ -25,7 +25,7 @@ class DoryConfigParser(BaseTrasformation):
         self.config["BNRelu_bits"] = 32
         self.config["code reserved space"] = self.code_size
         
-        # we handle only models with just oe input
+        # we handle only models with just one input
         self.config["n_inputs"] = 1
         input_quant = model.find_consumer("global_in")
         if input_quant.op_type != "Quant":  
@@ -34,16 +34,22 @@ class DoryConfigParser(BaseTrasformation):
         self.config["input_bits"] = int(model.get_initializer(input_quant.input[3]))
         self.config["input_signed"] = bool(get_by_name(input_quant.attribute, "signed").i)
         
-        # remove the input quantization node
-        in_tensor = input_quant.input[0]
-        out_tensor = input_quant.output[0]
-        
-        target_node = model.find_consumer(out_tensor)
-        if target_node is None:
-            self.error_message(f"Consumer of Quant_0 output not found, check the QONNX graph.")
-        target_node.input[0] = in_tensor
-        
-        graph.node.remove(input_quant)
+        quant_node = input_quant
+        old_input_name = graph.input[0].name
+
+        quant_input_name = quant_node.input[0]
+        quant_output_name = quant_node.output[0]
+
+        assert old_input_name == quant_input_name
+
+        for node in graph.node:
+            if node == quant_node:
+                continue
+            for i, inp in enumerate(node.input):
+                if inp == quant_output_name:
+                    node.input[i] = quant_input_name
+
+        graph.node.remove(quant_node)
         
         return (model, False)
             

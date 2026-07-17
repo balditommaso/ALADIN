@@ -13,21 +13,36 @@ from functools import partial
 
 
 class onnx_manager_PULP(Parser_DORY_to_HW):
+    
+    LAYERS_SUPPORTED = [
+        "Convolution", 
+        "Pooling", 
+        "FullyConnected", 
+        "Addition", 
+        "QAddition",
+        "ReluConvolution", 
+        "ReluPooling", 
+        "ReluFullyConnected", 
+        "ReluAddition", 
+        "ReluQAddition",
+        "BNReluConvolution", 
+        "RequantPooling", 
+        "BNReluFullyConnected", 
+        "BNReluAddition", 
+        "BNReluQAddition"
+    ]
 
     # Used to manage the ONNX files. By now, supported Convolutions (PW and DW), Pooling, Fully Connected and Relu.
     def __init__(
         self, 
         graph, 
-        config_file, 
-        config_file_dir, 
+        config_file = None, 
+        config_file_dir = None, 
         n_inputs = 1, 
         verify_checksum = True,
         L1_capacity = None,
         L2_capacity = None
     ):
-        layers_supported_by_HW_Backend_IR = ["Convolution", "Pooling", "FullyConnected", "Addition", "QAddition"]
-        layers_supported_by_HW_Backend_IR+= ["ReluConvolution", "ReluPooling", "ReluFullyConnected", "ReluAddition", "ReluQAddition"]
-        layers_supported_by_HW_Backend_IR+= ["BNReluConvolution", "RequantPooling", "BNReluFullyConnected", "BNReluAddition", "BNReluQAddition"]
         file_path = self.get_file_path()
         pattern_rewriter = self.get_pattern_rewriter()
         with open(os.path.join(file_path, "pattern_rules.json")) as f:
@@ -45,7 +60,6 @@ class onnx_manager_PULP(Parser_DORY_to_HW):
             db = HW_description['double_buffering']
         except KeyError:
             print("onnx_manager_PULP: Key 'double_buffering' not found in HW_description.json - setting to 2")
-
             db = 2
 
         self.double_buffering = db
@@ -55,16 +69,22 @@ class onnx_manager_PULP(Parser_DORY_to_HW):
 
         tiler = partial(tiler, double_buffering=self.double_buffering)
         
+        network_directory = None
+        if config_file_dir is not None and hasattr(config_file, "onnx_file"):
+            network_directory = os.path.join(
+                config_file_dir, 
+                os.path.dirname(config_file["onnx_file"])
+            )
+            
         super().__init__(
             graph, 
             rules, 
             pattern_rewriter, 
-            layers_supported_by_HW_Backend_IR, 
+            self.LAYERS_SUPPORTED, 
             HW_description,
-            os.path.join(config_file_dir, 
-            os.path.dirname(config_file["onnx_file"])), 
             config_file, 
             tiler, 
+            network_directory, 
             n_inputs, 
             verify_checksum
         )
@@ -122,11 +142,11 @@ class onnx_manager_PULP(Parser_DORY_to_HW):
                     if key not in node.constant_names:
                         print("WARNING: DORY Backend. Attribute {} of Node {} is not inside the predefined parameters for DORY nodes.".format(key, node.name))
                         WARNINGS +=1
-                if isinstance(value,list):
+                if isinstance(value, list):
                     if len(value) == 0:
                         WARNINGS +=1
                         print("WARNING: DORY Backend. Attribute {} of Node {} is an empty list.".format(key, node.name))
-                if isinstance(value,type(None)):
+                if isinstance(value, type(None)):
                     WARNINGS +=1
                     print("WARNING: DORY Backend. Attribute {} of Node {} is still not initialized.".format(key, node.name))
         print("\nDORY checking of the attribute of the graph: {} WARNINGS\n".format(WARNINGS))

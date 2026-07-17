@@ -34,7 +34,7 @@ ifeq '$(FLASH_TYPE)' 'MRAM'
 READFS_FLASH = target/chip/soc/mram
 endif
 
-
+runner_args += --vcd
 APP_CFLAGS += -DFLASH_TYPE=$(FLASH_TYPE) -DUSE_$(FLASH_TYPE) -DUSE_$(RAM_TYPE)
 % if blocking_dma:
 APP_CFLAGS += -DALWAYS_BLOCK_DMA_TRANSFERS

@@ -18,6 +18,11 @@
     "--cpus=10"
   ],
 
+  "remoteEnv": {
+      "PATH": "/dory_env/bin:${containerEnv:PATH}"
+  },
+
+
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/ALADIN,type=bind",
   "workspaceFolder": "/workspaces/ALADIN/",
   "updateRemoteUserUID": false,

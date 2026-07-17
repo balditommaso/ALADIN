@@ -396,16 +396,16 @@ void ${prefix}network_run_cluster(void *args)
   {
     *((uint8_t*)(l2_final_output + i)) = *((uint8_t*)(L2_output + i));
   }
-#ifdef VERBOSE
-  // print final output (assuming 4 bytes per logit = int32_t)
-  int num_outputs = activations_out_size[${len(DORY_HW_graph)-1}] / ${int(DORY_HW_graph[-1].output_activation_bits / 8)};
-  int32_t *out = (int32_t *)l2_final_output;
+## #ifdef VERBOSE
+##   // print final output (assuming 4 bytes per logit = int32_t)
+##   int num_outputs = activations_out_size[${len(DORY_HW_graph)-1}] / ${int(DORY_HW_graph[-1].output_activation_bits / 8)};
+##   int32_t *out = (int32_t *)l2_final_output;
 
-  printf("\nFinal output (%d logits):\n", num_outputs);
-  for (int i = 0; i < num_outputs; i++)
-  {
-    printf("%ld ", (long)out[i]);
-  }
-  printf("\n");
-#endif
+##   printf("\nFinal output (%d logits):\n", num_outputs);
+##   for (int i = 0; i < num_outputs; i++)
+##   {
+##     printf("%ld ", (long)out[i]);
+##   }
+##   printf("\n");
+## #endif
 }

@@ -69,7 +69,7 @@ def main(args: Dict) -> None:
                             os._exit = tmp_exit
                         
                         with open("./logs/HW_related/json_files/06_DORY_HW_tiled_graph.json", "r") as f:
-                                layers_tiling_info = json.load(f)["graph"]
+                            layers_tiling_info = json.load(f)["graph"]
                         
                                             
                         for n_core in NUM_CORES:

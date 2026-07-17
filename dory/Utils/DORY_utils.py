@@ -29,7 +29,7 @@ class Printer():
         # Logging function to report exported graph of PULP
         dict_graph = {}
         dict_graph["graph"] = []
-        for i,nodes in enumerate(graph):
+        for i, nodes in enumerate(graph):
             dict_graph["graph"].append(nodes.export_to_dict()) 
         with open("{}/{}.json".format(os.path.join(self.folder,"json_files"),name_file), "w") as outfile:
             json.dump(dict_graph, outfile, indent=2)

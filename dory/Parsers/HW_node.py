@@ -10,7 +10,6 @@ from .Layer_node import Layer_node
 
 
 class HW_node(DORY_node):
-    # A self allocated in the PULP_Graph
 
     # Class attributes
     Tiler = None
@@ -21,7 +20,7 @@ class HW_node(DORY_node):
         self.tiling_dimensions = {}
         lvl = None
         for level in range(HW_description["memory"]["levels"]):
-            lvl = "L{}".format(level+1)
+            lvl = f"L{level + 1}"
             self.tiling_dimensions[lvl] = {}
             self.tiling_dimensions[lvl]["weights_dimensions"] = None
             self.tiling_dimensions[lvl]["input_dimensions"] = None
@@ -55,11 +54,11 @@ class HW_node(DORY_node):
     def create_tiling_dimensions(self, previous_node, config_file):
         #  ATTENTION MEMORY L3 --> TILE MEMORY DIMENSION --> Decide how to set. Re-init the whole memory?
         for level in np.arange(self.HW_description["memory"]["levels"],1, -1):
-            (weights_dim, input_dims, output_dims) = self.Tiler(
-                    self, 
-                    previous_node, 
-                    config_file["code reserved space"]
-                ).get_tiling(level)
+            weights_dim, input_dims, output_dims = self.Tiler(
+                self, 
+                previous_node, 
+                config_file["code reserved space"]
+            ).get_tiling(level)
             self.tiling_dimensions[f"L{level-1}"]["input_dimensions"] = input_dims
             self.tiling_dimensions[f"L{level-1}"]["output_dimensions"] = output_dims
             if "Convolution" in self.name or "FullyConnected" in self.name:
@@ -91,8 +90,13 @@ class HW_node(DORY_node):
             
             self.tiling_dimensions[f"L{level-1}"]["bias_memory"] = int(bias_memory)
             self.tiling_dimensions[f"L{level-1}"]["constants_memory"] = int(constants_memory)
-            self.tiling_dimensions[f"L{level-1}"]["input_activation_memory"] = np.prod(self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"])*self.input_activation_bits/8
-            self.tiling_dimensions[f"L{level-1}"]["output_activation_memory"] = np.prod(self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"])*self.output_activation_bits/8
+            self.tiling_dimensions[f"L{level-1}"]["input_activation_memory"] = np.prod(
+                self.tiling_dimensions["L{}".format(level-1)]["input_dimensions"]
+            ) * self.input_activation_bits / 8
+            
+            self.tiling_dimensions[f"L{level-1}"]["output_activation_memory"] = np.prod(
+                self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"]
+            ) * self.output_activation_bits / 8
 
     def rename_weights(self):
         weight_name = ""

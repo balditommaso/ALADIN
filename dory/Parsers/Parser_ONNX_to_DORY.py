@@ -35,10 +35,10 @@ class Parser_ONNX_to_DORY:
         As an alternative, create a DORY node (Mul, Shift, Div, Clip, etc...).
         '''
         new_node = DORY_node.DORY_node()
-        new_node.populate_DORY_node(node_iterating,graph, self.net_prefix)
+        new_node.populate_DORY_node(node_iterating, graph, self.net_prefix)
         if new_node.name in ['FullyConnected', 'Addition', 'Convolution', 'Pooling']:
             new_node = Layer_node.Layer_node()
-            new_node.populate_Layer_node(node_iterating,graph, self.net_prefix)
+            new_node.populate_Layer_node(node_iterating, graph, self.net_prefix)
         return new_node
 
     def ONNXtoDORY(self):
@@ -153,7 +153,7 @@ class Parser_ONNX_to_DORY:
                     for j, nodes_scan_2 in enumerate(self.DORY_Graph):
                         if nodes_scan_2.output_index in nodes_scan.input_indexes and nodes_scan_2.output_index != node.output_index:
                             if nodes_scan_2.branch_out != 1 and node.branch_out != 1:
-                                if(i < j):
+                                if i < j:
                                     node.add_existing_parameter("branch_change", 1)
                                     nodes_scan_2.add_existing_parameter("branch_last", 0)
                                     break

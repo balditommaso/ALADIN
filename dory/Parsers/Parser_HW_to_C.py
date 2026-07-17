@@ -13,7 +13,17 @@ from dory.Parsers.HW_node import HW_node
 
 class Parser_HW_to_C:
     # Used to manage the ONNX files. By now, supported Convolutions (PW and DW), Pooling, Fully Connected and Relu.
-    def __init__(self, graph, network_directory, HW_description, verbose_level, perf_layer, save_string, app_directory, n_inputs = 1):
+    def __init__(
+        self, 
+        graph: list, 
+        network_directory: str, 
+        HW_description: dict[str, any], 
+        verbose_level: str, 
+        perf_layer: str, 
+        save_string: str, 
+        app_directory: str, 
+        n_inputs: int = 1
+    ):
         self.HWgraph = graph
         self.HW_description = HW_description
         self.verbose_level = verbose_level
@@ -122,10 +132,18 @@ class Parser_HW_to_C:
             in_bits = in_node.input_activation_bits
             signed = in_node.input_activation_type == "int"
             try:
-                x_in = np.loadtxt(os.path.join(self.network_directory, infile), delimiter=',', dtype=np.uint8, usecols=[0])
+                x_in = np.loadtxt(
+                    os.path.join(self.network_directory, infile), 
+                    delimiter=',', 
+                    dtype=np.uint8, 
+                    usecols=[0]
+                )
                 x_in = x_in.flatten()
             except FileNotFoundError:
-                print(f"========= WARNING ==========\nInput file {os.path.join(self.network_directory, 'input.txt')} not found; generating random inputs!")
+                print(f"========= WARNING ==========\n" \
+                      f"Input file {os.path.join(self.network_directory, 'input.txt')} not found;\n" \
+                       "generating random inputs!"
+                )
                 np.random.seed(42)
                 x_in = np.random.randint(
                     low=-2**(in_node.input_activation_bits - 1) if signed else 0, 
