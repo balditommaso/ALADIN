@@ -15,6 +15,8 @@ def get_prev_out_scale(mw: ModelWrapper, node: NodeProto) -> np.array:
     curr_node = deepcopy(node)
     
     for _ in range(MAX_DEPTH):
+        if curr_node.op_type == "Quant":
+            return np.array(mw.get_initializer(curr_node.input[1]))
         buffer = get_by_name(curr_node.attribute, "out_scale")
         if buffer is not None:
             return numpy_helper.to_array(buffer.t)
@@ -139,12 +141,21 @@ def replace_quant(mw: ModelWrapper, node: NodeProto, delta: int = 2**16) -> str:
     clip_node.attribute.extend([bit_width_attr, clip_min_attr, clip_max_attr])
     mw.graph.node.append(clip_node)
     # reconnecte the chain
-    next_node = mw.find_consumer(node.output[0])
-    if next_node is not None:
-        next_node.input[0] = out_clip_tensor.name
-    else:
-        mw.graph.output[0].name = out_clip_tensor.name
+    consumers = mw.find_consumers(node.output[0])
+    if consumers:
+        for cons in consumers:
+            for i in range(len(cons.input)):
+                if cons.input[i] == node.output[0]:
+                    cons.input[i] = out_clip_tensor.name
 
+    else:
+        # no consumers -> this Quant feeds a graph output
+        for out in mw.graph.output:
+            if out.name == node.output[0]:
+                out.name = out_clip_tensor.name
+
+                
+                
     mw.graph.node.remove(node)
         
 
@@ -154,11 +165,11 @@ class DoryQuantParser(BaseTrasformation):
         super().__init__(verbose)
         self.delta = delta
 
-    def apply(self, model: ModelWrapper) -> Tuple[ModelWrapper, bool]:
-        iter_model = deepcopy(model)
-
-        quant_nodes = [n for n in iter_model.graph.node if n.op_type == "Quant"]
-        for node in quant_nodes:
-            replace_quant(iter_model, node, self.delta)
-
-        return (iter_model, False)
+    def apply(self, mw: ModelWrapper):
+        quant_nodes = [node for node in mw.graph.node if node.op_type == "Quant"]
+        
+        # Iterate in REVERSE to avoid index/dependency issues
+        for node in reversed(quant_nodes):
+            replace_quant(mw, node)
+            
+        return mw, False

@@ -31,7 +31,6 @@ class RecordOutScale(BaseTrasformation):
     
     def apply(self, model: ModelWrapper) -> Tuple[ModelWrapper, bool]:
         graph = model.graph
-        # iter_graph = deepcopy(graph)
         for node in graph.node:
             # check operation which could have static parameters
             if node.op_type == "Quant" or len(node.input) < 2:
