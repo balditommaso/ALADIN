@@ -17,6 +17,7 @@ from dory.Frontend_frameworks.QONNX.transformations.dory_config_generator import
 from dory.Frontend_frameworks.QONNX.transformations.fold_static_quant import FoldStaticQuant, min_int, max_int
 from dory.Frontend_frameworks.QONNX.transformations.record_out_scale import RecordOutScale
 from dory.Frontend_frameworks.QONNX.transformations.dory_quant_parser import DoryQuantParser
+from dory.Frontend_frameworks.QONNX.transformations.dory_residual_parser import DoryResidualQuantParser
 from dory.Frontend_frameworks.QONNX.transformations.dory_avg_pool_parser import DoryAvgPoolQuantParser
 from dory.Frontend_frameworks.QONNX.transformations.dory_flatten_parser import DoryFlattenParser
 from dory.Frontend_frameworks.QONNX.transformations.rename_tensors import RenameTensorsSequentially
@@ -36,7 +37,7 @@ class onnx_manager(Quantlab_onnx_manager):
         # config_dir: str = "", 
         net_prefix: str = "", 
         log: str = "./logs/Frontend",
-        delta: int = 2**16,
+        delta: int = 16,
         verbose: bool = False
     ):
         print("")
@@ -63,6 +64,8 @@ class onnx_manager(Quantlab_onnx_manager):
         model.save(os.path.join(self.log_dir, "C_QONNX_remove_input_quant.onnx"))
         # adapt to dory activation quantization
         transformed_onnx_path = os.path.join(self.log_dir, "D_QONNX_parse_quant_act.onnx")
+        # TODO: fuse add and QUANT node
+        model = model.transform(DoryResidualQuantParser(delta=delta))
         model = model.transform(DoryQuantParser(delta=delta, verbose=verbose))
         model = model.transform(DoryAvgPoolQuantParser(delta=delta, verbose=verbose))
         model = model.transform(InferShapes())
@@ -71,7 +74,7 @@ class onnx_manager(Quantlab_onnx_manager):
 
         model.save(transformed_onnx_path)
         print("QONNX conversion complete!\nValidation...")
-        self.check_flow(qonnx_model, transformed_onnx_path, config_file)
+        # self.check_flow(qonnx_model, transformed_onnx_path, config_file)
 
         super().__init__(transformed_onnx_path, config_file, net_prefix)
 

@@ -33,7 +33,7 @@ class RecordOutScale(BaseTrasformation):
         graph = model.graph
         for node in graph.node:
             # check operation which could have static parameters
-            if node.op_type == "Quant" or len(node.input) < 2:
+            if node.op_type in ["Quant", "Add"] or len(node.input) < 2:
                 continue
             
             if len(node.input) == 2:

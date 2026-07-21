@@ -70,10 +70,17 @@ class Tiler_Add_PULP():
         ###############################################
         ##### L2 DIMENSIONS DEFINITION: EARLY EXIT ####
         ###############################################
-        buffer_total = self.HW_node.tiling_dimensions["L2"]["constants_memory"] + self.HW_node.tiling_dimensions["L2"]["input_activation_memory"] * int(np.ceil(1 + self.HW_node.second_input_activation_bits/self.HW_node.input_activation_bits)) + self.HW_node.tiling_dimensions["L2"]["output_activation_memory"]
+        buffer_total = self.HW_node.tiling_dimensions["L2"]["constants_memory"] \
+                        + self.HW_node.tiling_dimensions["L2"]["input_activation_memory"] \
+                        * int(np.ceil(1 + self.HW_node.second_input_activation_bits / self.HW_node.input_activation_bits)) \
+                        + self.HW_node.tiling_dimensions["L2"]["output_activation_memory"]
         # return immediatly if the memory fits the L1
         if buffer_total <= L1_memory:
-            return ([], self.HW_node.tiling_dimensions["L2"]["input_dimensions"] , self.HW_node.tiling_dimensions["L2"]["output_dimensions"] )
+            return (
+                [], 
+                self.HW_node.tiling_dimensions["L2"]["input_dimensions"], 
+                self.HW_node.tiling_dimensions["L2"]["output_dimensions"] 
+            )
         else:
             db = self.double_buffering
 

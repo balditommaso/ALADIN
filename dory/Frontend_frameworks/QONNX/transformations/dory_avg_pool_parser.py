@@ -45,7 +45,7 @@ class DoryAvgPoolQuantParser(BaseTrasformation):
             
             round_fx = resolve_rounding_mode(rounding_mode)
             
-            M = round_fx(out_scale / in_scale * self.delta).astype(np.float32)
+            M = round_fx(out_scale / in_scale * 2 ** self.delta).astype(np.float32)
             
             M = numpy_helper.from_array(M, model.make_new_valueinfo_name())
             graph.initializer.append(M)
@@ -67,7 +67,7 @@ class DoryAvgPoolQuantParser(BaseTrasformation):
             
             # add node on for asymmetric qunatization
             if zeropt is not None and not np.all(zeropt == 0):
-                Z = np.round(zeropt * self.delta * out_scale)
+                Z = np.round(zeropt * out_scale * 2 ** self.delta)
                 Z = numpy_helper.from_array(Z, model.make_new_valueinfo_name())
                 graph.initializer.append(Z)
                 

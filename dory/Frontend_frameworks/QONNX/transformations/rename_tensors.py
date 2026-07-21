@@ -19,12 +19,13 @@ class RenameTensorsSequentially(BaseTrasformation):
         # Go through nodes in order — this keeps graph execution order
         for node in graph.node:
             # Rename ALL inputs (not just input[0])
-            for i in range(len(node.input)):
+            for i in range(min(2, len(node.input))):        # HACK to save bias tag
                 in_name = node.input[i]
                 if in_name not in rename_map:
                     rename_map[in_name] = str(counter)
                     counter += 1
-                node.input[i] = rename_map[in_name]
+                
+                node.input[i] = rename_map[in_name] 
 
             # Rename ALL outputs (not just output[0])
             for i in range(len(node.output)):

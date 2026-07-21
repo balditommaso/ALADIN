@@ -142,7 +142,7 @@ void ${func_name}(
   int last_w_load = (${tile_dim_w} == 1) ? 1 : 0;
   int iter;
   // tile loop nest
-  for(iter=0; iter<${tile_dim_nof}*${tile_dim_h}*${tile_dim_w}; iter++) {
+  for(iter = 0; iter < ${tile_dim_nof}*${tile_dim_h}*${tile_dim_w}; iter++) {
     // loop nest is nof,h,w,(nif=0)
     _i_w_load += 1;
     if(_i_w_load==${tile_dim_w})
