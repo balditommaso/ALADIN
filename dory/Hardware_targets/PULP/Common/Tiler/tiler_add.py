@@ -5,7 +5,8 @@ import math
 import os
 import sys
 from ortools.constraint_solver import pywrapcp
-from ortools.constraint_solver import solver_parameters_pb2
+
+
 
 class Tiler_Add_PULP():
     # Class to generate the Tiling of the layer.
@@ -22,8 +23,8 @@ class Tiler_Add_PULP():
             # L3 tiling
             tiling = self.get_tiling_Add_L2()
             return tiling
-        print("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
-        os._exit(0)
+        raise ValueError("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
+
 
     def get_tiling_Add_L3(self):
         L2_memory = self.HW_node.HW_description["memory"]["L2"]["dimension"] - self.code_reserved_space
@@ -43,22 +44,39 @@ class Tiler_Add_PULP():
             input_L3 = 1
         else:
             input_L3 = 0
-        buffer_total = self.HW_node.input_activation_memory + self.HW_node.output_activation_memory + self.HW_node.constants_memory
-
+            
+        buffer_total = sum(
+            self.HW_node.input_activation_memory,
+            self.HW_node.output_activation_memory, 
+            self.HW_node.constants_memory
+        )
         if (buffer_total <= L2_memory) and input_L3==0:
-            return ([], [self.HW_node.input_channels, self.HW_node.input_dimensions[0], self.HW_node.input_dimensions[1]], [self.HW_node.output_channels, self.HW_node.output_dimensions[0], self.HW_node.output_dimensions[1]])
-        print("  Add ERROR: no L3-L2 tiling supported. Exiting...")
-        os._exit(0)
-        return None
+            return (
+                [], 
+                [
+                    self.HW_node.input_channels, 
+                    self.HW_node.input_dimensions[0], 
+                    self.HW_node.input_dimensions[1]
+                ], 
+                [
+                    self.HW_node.output_channels, 
+                    self.HW_node.output_dimensions[0], 
+                    self.HW_node.output_dimensions[1]
+                ]
+            )
+
+        raise ValueError("Add ERROR: no L3-L2 tiling supported. Exiting...")
 
     def get_tiling_Add_L2(self):
         # This function generate the layer function to be included in the project for the addition operation.
         ###############################################
         ##### PARAMETERS INITIALIZATION ###############
         ###############################################
-        L1_memory = self.HW_node.HW_description["memory"]["L1"]["dimension"] \
-            - self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"] \
-            - 7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
+        L1_memory = sum(
+            self.HW_node.HW_description["memory"]["L1"]["dimension"],
+            -self.HW_node.HW_description["HW specific parameters"]["accelerator core0 stack"],
+            -7 * self.HW_node.HW_description["HW specific parameters"]["accelerator core1-7 stack"]
+        )
         inp_dim = self.HW_node.tiling_dimensions["L2"]["input_dimensions"][1:]
         out_dim = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][1:]
         out_ch = self.HW_node.tiling_dimensions["L2"]["output_dimensions"][0]
@@ -101,9 +119,16 @@ class Tiler_Add_PULP():
 
         # CONSTRAINTS: managing of correct dimensions (no decimal h_out and any
         # type of rounding)
-        input_tile_dimension  = (db * in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits + 7 ) // 8 # the 7 is to account for bit precision of 1, which still occupy an entire byte
-        output_tile_dimension = (db * out_ch * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits + 7 ) // 8 # the 7 is to account for bit precision of 1, which still occupy an entire byte
-        constraint_all = input_tile_dimension * int(np.ceil(1+self.HW_node.second_input_activation_bits/self.HW_node.input_activation_bits)) + output_tile_dimension
+        input_tile_dimension  = (
+            db * in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits + 7 
+        ) // 8 # the 7 is to account for bit precision of 1, which still occupy an entire byte
+        output_tile_dimension = (
+            db * out_ch * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits + 7 
+        ) // 8 # the 7 is to account for bit precision of 1, which still occupy an entire byte
+        constraint_all = input_tile_dimension * int(
+            np.ceil(1 + self.HW_node.second_input_activation_bits / self.HW_node.input_activation_bits)
+        ) + output_tile_dimension
+        
         solver.Add(constraint_all <= L1_memory)
         # objective
         obj_expr = solver.IntVar(0, 1000000000000, "obj_expr")
@@ -136,7 +161,9 @@ class Tiler_Add_PULP():
             tile_w_in = collector.Value(best_solution, tile_w_in)
             tile_h_out = collector.Value(best_solution, tile_h_out)
             tile_w_out = collector.Value(best_solution, tile_w_out)
-            return ([], [tile_n, tile_h_in, tile_w_in], [tile_n, tile_h_out, tile_w_out])
-        print("  Add ERROR: no tiling found. Exiting...")
-        os._exit(0)
-        return None
+            return (
+                [], 
+                [tile_n, tile_h_in, tile_w_in], 
+                [tile_n, tile_h_out, tile_w_out]
+            )
+        raise ValueError("Add ERROR: no tiling found.")

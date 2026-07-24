@@ -53,7 +53,7 @@ class HW_node(DORY_node):
 
     def create_tiling_dimensions(self, previous_node, config_file):
         #  ATTENTION MEMORY L3 --> TILE MEMORY DIMENSION --> Decide how to set. Re-init the whole memory?
-        for level in np.arange(self.HW_description["memory"]["levels"],1, -1):
+        for level in range(self.HW_description["memory"]["levels"], 1 ,-1):
             weights_dim, input_dims, output_dims = self.Tiler(
                 self, 
                 previous_node, 
@@ -98,6 +98,7 @@ class HW_node(DORY_node):
                 self.tiling_dimensions["L{}".format(level-1)]["output_dimensions"]
             ) * self.output_activation_bits / 8
 
+
     def rename_weights(self):
         weight_name = ""
         if "Convolution" in self.name or "FullyConnected" in self.name:
@@ -107,6 +108,7 @@ class HW_node(DORY_node):
                         if len(self.__dict__[name]["value"].flatten()) > self.output_channels:
                             self.__dict__["weights"] = self.__dict__.pop(name)
                             self.constant_names[i] = "weights"
+
 
     @staticmethod
     def _compress(x, bits, signed=False):

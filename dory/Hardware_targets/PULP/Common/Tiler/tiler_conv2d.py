@@ -17,10 +17,6 @@ class Tiler_Conv2D_PULP():
         self.__dict__ = tiler.__dict__
 
     def get_tiling(self, level):
-        '''
-        This function generate the layer function to be included in the project for the conv2d operations 
-        (Convolutions and Fully Connected layers).
-        '''
         if level == 3:
             # for platforms with 3 levels of tailing
             tiling = self.get_tiling_conv2d_L3()
@@ -28,17 +24,16 @@ class Tiler_Conv2D_PULP():
             in_dim_exceeds = self.HW_node.input_dimensions[0] > tiling[1][1]
             out_dim_exceeds = self.HW_node.output_dimensions[0] > tiling[2][1]
             if out_ch_exceeds and (in_dim_exceeds or out_dim_exceeds):
-                print("Convolution: Tiling of weights and Input/output activation from L3 not yet working. Exiting...")
-                os._exit(0)
-            else:
-                return tiling
+                raise ValueError("Convolution: Tiling of weights and Input/output activation from L3 not yet working. Exiting...")
+            
+            return tiling
+        
         if level == 2:
             # for platforms with only 2 levels of tailing
             tiling = self.get_tiling_conv2d_L2()
             return tiling
-        print("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
-        os._exit(0)
-
+        
+        raise ValueError("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
 
 
     def get_tiling_conv2d_L3(self):
@@ -296,10 +291,7 @@ class Tiler_Conv2D_PULP():
                     [out_ch, tile_h_out, out_dim[1]]
                 )
             
-            
-        print("  Conv2d ERROR: no L3-L2 tiling found. Exiting...")
-        os._exit(0)
-        return None
+        raise ValueError("Conv2d ERROR: no L3-L2 tiling found. Exiting...")
 
 
     def get_tiling_conv2d_L2(self): 
@@ -452,7 +444,7 @@ class Tiler_Conv2D_PULP():
                 self.HW_node.input_activation_bits, 
                 self.HW_node.output_activation_bits, 
                 self.HW_node.weight_bits
-            ))==0)
+            )) == 0)
             
         if g == 1:
             solver.Add(tile_n_in == int(in_ch))
@@ -461,7 +453,7 @@ class Tiler_Conv2D_PULP():
             self.HW_node.input_activation_bits, 
             self.HW_node.output_activation_bits, 
             self.HW_node.weight_bits
-        ))==0)
+        )) == 0)
 
         ###############################################
         ##### CONSTRAINTS FOR DIMENSION ###############
@@ -510,16 +502,17 @@ class Tiler_Conv2D_PULP():
             constants_tile_dimension = 0
             
 
-        constraint_all = (self.HW_node.tiling_dimensions["L2"]["bias_memory"] + 
-            input_tile_dimension + 
-            output_tile_dimension + 
-            weight_tile_dimension + 
-            constants_tile_dimension + 
-            im2col_dimension + 
-            lut_dim + 
-            weight_full_prec_dimension + 
+        constraint_all = sum((
+            self.HW_node.tiling_dimensions["L2"]["bias_memory"],
+            input_tile_dimension,
+            output_tile_dimension,
+            weight_tile_dimension,
+            constants_tile_dimension,
+            im2col_dimension,
+            lut_dim,
+            weight_full_prec_dimension,
             40
-        )
+        ))
         
 
         solver.Add(constraint_all <= L1_memory)
@@ -601,8 +594,15 @@ class Tiler_Conv2D_PULP():
                 [tile_n_in, tile_h_in, tile_w_in], 
                 [tile_n_out, tile_h_out, tile_w_out]
             )
-        # no solution found!
-        print("  Conv2d ERROR: no L2-L1 tiling found of layer {} with dimensions {} / {}, input / output channels {} / {}. Exiting...".format(self.HW_node.__dict__["name"], self.HW_node.__dict__["input_dimensions"], self.HW_node.__dict__["output_dimensions"], self.HW_node.__dict__["input_channels"], self.HW_node.__dict__["output_channels"] ))
-        os._exit(0)
-        return None
+        
+        raise ValueError(
+            "  Conv2d ERROR: no L2-L1 tiling found of layer {} with dimensions {} / {}, input / output channels {} / {}. Exiting...".format(
+                self.HW_node.__dict__["name"], 
+                self.HW_node.__dict__["input_dimensions"], 
+                self.HW_node.__dict__["output_dimensions"], 
+                self.HW_node.__dict__["input_channels"], 
+                self.HW_node.__dict__["output_channels"] 
+            )
+        )
+
 

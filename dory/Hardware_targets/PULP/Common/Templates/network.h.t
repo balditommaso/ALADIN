@@ -47,7 +47,7 @@ static const char * L3_weights_files[] = {
 static int L3_weights_size[${weights_number}];
 static int layers_pointers[${len(DORY_HW_graph)}];
 % endif
-static char * Layers_name[${len(DORY_HW_graph)}] = {\
+static char *Layers_name[${len(DORY_HW_graph)}] = {\
 % for node in DORY_HW_graph:
 "${node.prefixed_name}"${'' if loop.last else ', '}\
 % endfor

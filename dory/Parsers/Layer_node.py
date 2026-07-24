@@ -26,6 +26,7 @@ class Layer_node(DORY_node):
         self.layout = None
         self.prefix = ""
 
+
     def update_input_dimensions(self, activation_tensor, Layer_parameters):
         if activation_tensor.name in self.input_indexes:
             ## Batch, C, H, W
@@ -47,6 +48,7 @@ class Layer_node(DORY_node):
                 Layer_parameters["input_dimensions"] =  [1, 1]
         return Layer_parameters
 
+
     def update_output_dimensions(self, activation_tensor, Layer_parameters):
         if activation_tensor.name == self.output_index:
             ## Batch, C, H, W
@@ -60,6 +62,7 @@ class Layer_node(DORY_node):
             if len(Layer_parameters["output_dimensions"]) == 0:
                 Layer_parameters["output_dimensions"] =  [1, 1]
         return Layer_parameters
+
 
     def populate_Layer_node(self, node_iterating, graph, prefix=""):
         self.populate_DORY_node(node_iterating, graph)
@@ -97,9 +100,10 @@ class Layer_node(DORY_node):
         #### Adding control for layers with g > 1. Only DW (groups = input channels = output channels) and g=1 supported.
         if 'group' in Layer_parameters and Layer_parameters['group'] > 1:
             if not (Layer_parameters['group'] == Layer_parameters["output_channels"] == Layer_parameters["input_channels"]):
-                print(" Depthwise convolution with input channels != output channels != groups")
-                os._exit(0)
+                raise ValueError("Depthwise convolution with input channels != output channels != groups")
+   
         self.add_existing_dict_parameter(Layer_parameters)
+
 
     def add_memory_and_MACs(self):
         if "Convolution" in self.name or "FullyConnected" in self.name:

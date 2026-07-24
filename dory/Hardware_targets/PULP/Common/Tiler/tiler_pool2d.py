@@ -22,8 +22,9 @@ class Tiler_Pool2D_PULP():
             # L3 tiling
             tiling = self.get_tiling_pool2d_L2()
             return tiling
-        print("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
-        os._exit(0)
+        
+        raise ValueError("Error: Either you should be in L3-L2 tiling or L2-L1 tiling")
+
 
     def get_tiling_pool2d_L3(self):
         L2_memory = self.HW_node.HW_description["memory"]["L2"]["dimension"] - self.code_reserved_space
@@ -43,9 +44,26 @@ class Tiler_Pool2D_PULP():
             input_dim_constraint = int(self.previous_HW_node.tiling_dimensions["L2"]["output_activation_memory"])
         else:
             input_L3 = 0
-        buffer_total = self.HW_node.input_activation_memory + self.HW_node.output_activation_memory + self.HW_node.constants_memory
-        if (buffer_total <= L2_memory) and input_L3==0:
-            return ([], [self.HW_node.input_channels, self.HW_node.input_dimensions[0], self.HW_node.input_dimensions[1]], [self.HW_node.output_channels, self.HW_node.output_dimensions[0], self.HW_node.output_dimensions[1]])
+            
+        buffer_total = sum(
+            self.HW_node.input_activation_memory,
+            self.HW_node.output_activation_memory,
+            self.HW_node.constants_memory
+        )
+        if buffer_total <= L2_memory and input_L3 == 0:
+            return (
+                [], 
+                [
+                    self.HW_node.input_channels, 
+                    self.HW_node.input_dimensions[0], 
+                    self.HW_node.input_dimensions[1]
+                ], 
+                [
+                    self.HW_node.output_channels, 
+                    self.HW_node.output_dimensions[0], 
+                    self.HW_node.output_dimensions[1]
+                ]
+            )
         else:
             db_O = 1
         
@@ -72,8 +90,12 @@ class Tiler_Pool2D_PULP():
                 if db_x == 2:
                     db_O = 2
 
-            input_tile_dimension  = (db_x * in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits + 7 ) // 8 # the 7 is to account for bit precision of 1, which still occupy an entire byte
-            output_tile_dimension = (db_O * out_ch * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits + 7 ) // 8  # the 7 is to account for bit precision of 1, which still occupy an entire byte
+            input_tile_dimension  = (
+                db_x * in_ch * tile_h_in * inp_dim[1] * self.HW_node.input_activation_bits + 7 
+            ) // 8 # the 7 is to account for bit precision of 1, which still occupy an entire byte
+            output_tile_dimension = (
+                db_O * out_ch * tile_h_out * out_dim[1] * self.HW_node.output_activation_bits + 7 
+            ) // 8  # the 7 is to account for bit precision of 1, which still occupy an entire byte
             constants = 0
             for name in self.HW_node.constant_names:
                 if name in ["l","k"]:
@@ -117,12 +139,12 @@ class Tiler_Pool2D_PULP():
                 tile_n = collector.Value(best_solution, tile_n)
                 tile_h_in = collector.Value(best_solution, tile_h_in)
                 tile_h_out = collector.Value(best_solution, tile_h_out)
-                return ([], [tile_n, tile_h_in, self.HW_node.input_dimensions[1]], [tile_n, tile_h_out, self.HW_node.output_dimensions[1]])
-        print("  Pool2D ERROR: no L3-L2 tiling found. Exiting...")
-        os._exit(0)
-        return None
-
-
+                return (
+                    [], 
+                    [tile_n, tile_h_in, self.HW_node.input_dimensions[1]], 
+                    [tile_n, tile_h_out, self.HW_node.output_dimensions[1]]
+                )
+        raise ValueError("Pool2D ERROR: no L3-L2 tiling found. Exiting...")
 
 
     def get_tiling_pool2d_L2(self):
@@ -144,10 +166,18 @@ class Tiler_Pool2D_PULP():
         ###############################################
         ##### L2 DIMENSIONS DEFINITION: EARLY EXIT ####
         ###############################################
-        buffer_total = self.HW_node.tiling_dimensions["L2"]["constants_memory"] + self.HW_node.tiling_dimensions["L2"]["input_activation_memory"] + self.HW_node.tiling_dimensions["L2"]["output_activation_memory"]
+        buffer_total = sum(
+            self.HW_node.tiling_dimensions["L2"]["constants_memory"], 
+            self.HW_node.tiling_dimensions["L2"]["input_activation_memory"],
+            self.HW_node.tiling_dimensions["L2"]["output_activation_memory"]
+        )
         # return immediatly if the memory fits the L1  
         if buffer_total <= L1_memory:
-            return ([], self.HW_node.tiling_dimensions["L2"]["input_dimensions"] , self.HW_node.tiling_dimensions["L2"]["output_dimensions"] )
+            return (
+                [], 
+                self.HW_node.tiling_dimensions["L2"]["input_dimensions"], 
+                self.HW_node.tiling_dimensions["L2"]["output_dimensions"] 
+            )
         else:
             db = self.double_buffering
 
@@ -165,8 +195,12 @@ class Tiler_Pool2D_PULP():
         tile_h_out = solver.IntVar(1, out_dim[0], 'tile_h_out')
         tile_w_out = solver.IntVar(1, out_dim[1], 'tile_w_out')
 
-        input_tile_dimension  = (db * tile_n * tile_h_in * tile_w_in * self.HW_node.input_activation_bits + 7 ) // 8 
-        output_tile_dimension = (db * tile_n * tile_h_out * tile_w_out * self.HW_node.output_activation_bits + 7 ) // 8 
+        input_tile_dimension  = (
+            db * tile_n * tile_h_in * tile_w_in * self.HW_node.input_activation_bits + 7 
+        ) // 8 
+        output_tile_dimension = (
+            db * tile_n * tile_h_out * tile_w_out * self.HW_node.output_activation_bits + 7 
+        ) // 8 
         constants = 0
         for name in self.HW_node.constant_names:
             if name in ["l","k"]:
@@ -192,9 +226,11 @@ class Tiler_Pool2D_PULP():
                    + 1 * tile_h_in
                    + 1000000 * tile_n)
         objective = solver.Maximize(obj_expr, 1)
-        decision_builder = solver.Phase([tile_n, tile_h_in, tile_w_in, tile_h_out, tile_w_out],
-                                        solver.CHOOSE_FIRST_UNBOUND,
-                                        solver.ASSIGN_MIN_VALUE)
+        decision_builder = solver.Phase(
+            [tile_n, tile_h_in, tile_w_in, tile_h_out, tile_w_out],
+            solver.CHOOSE_FIRST_UNBOUND,
+            solver.ASSIGN_MIN_VALUE
+        )
         # Create a solution collector.
         collector = solver.LastSolutionCollector()
         # Add the decision variables.
@@ -215,11 +251,20 @@ class Tiler_Pool2D_PULP():
             tile_w_out = collector.Value(best_solution, tile_w_out)
             if tile_h_in >= inp_dim[0]:
                 tile_h_in = inp_dim[0]
-                tile_h_out = int((tile_h_in -(ks[0] - 1) + (p[0] + p[2]) + (s[0] - 1))/s[0])
+                tile_h_out = int(
+                    (tile_h_in -(ks[0] - 1) + (p[0] + p[2]) + (s[0] - 1))/s[0]
+                )
             if tile_w_in >= inp_dim[1]:
                 tile_w_in = inp_dim[1]
-                tile_w_out = int((tile_w_in -(ks[1] - 1) + (p[1] + p[3]) + (s[0] - 1))/s[0])
-            return ([], [tile_n, tile_h_in, tile_w_in], [tile_n, tile_h_out, tile_w_out])
-        print("  Pool2d ERROR: no tiling found. Exiting...")
-        os._exit(0)
-        return None
+                tile_w_out = int(
+                    (tile_w_in -(ks[1] - 1) + (p[1] + p[3]) + (s[0] - 1))/s[0]
+                )
+                
+            return (
+                [], 
+                [tile_n, tile_h_in, tile_w_in], 
+                [tile_n, tile_h_out, tile_w_out]
+            )
+            
+        raise ValueError("Pool2d ERROR: no tiling found. Exiting...")
+

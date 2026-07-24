@@ -99,7 +99,7 @@ struct ${prefix}network_run_token ${prefix}network_run_async(void *l2_buffer, si
   pi_cluster_conf_init(&conf);
   conf.id=0;
 <%
-    n_args = 4 if l3_supported else 5
+    n_args = 5 if l3_supported else 6
 %>\
   unsigned int args[${n_args}];
   args[0] = (unsigned int) l2_buffer;
@@ -324,11 +324,11 @@ void ${prefix}network_run_cluster(void *args)
 
       if (i > 0 && branch_output[i-1] == 1 && L3_input_layers[i] == 1) 
       { 
-        L3_input = cl_ram_malloc(1500000);
+        L3_input = cl_ram_malloc(L3_INPUT_SIZE);
       }
       if (branch_output[i] == 1 && L3_output_layers[i] == 1) 
       {
-        cl_ram_free(L3_input + activations_out_size[i], 1500000 - activations_out_size[i]);
+        cl_ram_free(L3_input + activations_out_size[i], L3_INPUT_SIZE - activations_out_size[i]);
         layers_pointers[residual_number] = L3_input;
         residual_number++;
         bypass_dimension = activations_out_size[i];
